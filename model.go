@@ -92,11 +92,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.response, m.status = send(m)
 			return m, nil
 
-		case "tab": // Switch focus when Tab is pressed
-			// Move to the next input field
-			m.focused = (m.focused + 1) % len(m.fields) // Circular focus navigation
-		case "shift+tab": // Move to the previous input field when Shift + Tab is pressed
-			// Move to the previous input field
+		case "tab":
+			m.focused = (m.focused + 1) % len(m.fields)
+		case "shift+tab":
 			m.focused = (m.focused - 1 + len(m.fields)) % len(m.fields)
 		}
 	}
@@ -175,7 +173,6 @@ func (m Model) View() string {
 	if m.focused == 0 {
 		m.tabContent[m.activeTab].Blur()
 		methodStyle = focusedBorder
-
 	}
 	methodInput := methodStyle.Width(15).Height(1).Render(m.methodField.View())
 
@@ -184,7 +181,6 @@ func (m Model) View() string {
 	if m.focused == 1 {
 		m.tabContent[m.activeTab].Blur()
 		urlStyle = focusedBorder
-
 	}
 	urlInput := urlStyle.Height(1).Width(m.width - 19).Render(m.urlField.View())
 
