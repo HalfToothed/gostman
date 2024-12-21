@@ -11,30 +11,6 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-var (
-	borderStyle = lipgloss.NewStyle().
-		Padding(0, 0).
-		Border(lipgloss.RoundedBorder()).
-		BorderForeground(lipgloss.Color("62"))
-)
-
-func tabBorderWithBottom(left, middle, right string) lipgloss.Border {
-	border := lipgloss.RoundedBorder()
-	border.BottomLeft = left
-	border.Bottom = middle
-	border.BottomRight = right
-	return border
-}
-
-var (
-	inactiveTabBorder = tabBorderWithBottom("┴", "─", "┴")
-	activeTabBorder   = tabBorderWithBottom("┘", " ", "└")
-	highlightColor    = lipgloss.AdaptiveColor{Light: "#874BFD", Dark: "#7D56F4"}
-	inactiveTabStyle  = lipgloss.NewStyle().Border(inactiveTabBorder, true).BorderForeground(highlightColor).Padding(0, 1)
-	activeTabStyle    = inactiveTabStyle.Border(activeTabBorder, true)
-	windowStyle       = lipgloss.NewStyle().BorderForeground(highlightColor).Align(lipgloss.Left)
-)
-
 type Model struct {
 	lg               *lipgloss.Renderer
 	styles           *Styles
@@ -46,9 +22,11 @@ type Model struct {
 	tabContent       []textarea.Model
 	responseViewport *viewport.Model
 	activeTab        int
-	focused          string
 	response         string
 	status           string
+
+	focused int
+	fields  []string
 }
 
 func NewModel() Model {
@@ -62,18 +40,17 @@ func NewModel() Model {
 	m.urlField.Placeholder = "URL"
 	m.urlField.Focus()
 	m.urlField.Cursor.Blink = false
-	m.focused = "urlField"
 
 	m.methodField = textinput.New()
 	m.methodField.Placeholder = "METHOD"
 	m.methodField.Focus()
+	m.methodField.CharLimit = 6
 	m.methodField.Cursor.Blink = false
 
 	// Initialize tab contents
 	for _, tab := range m.tabs {
 		ta := newTextarea()
 		ta.Placeholder = fmt.Sprintf("Write something in %s...", tab)
-		ta.Focus()
 		ta.Cursor.Blink = false
 		m.tabContent = append(m.tabContent, ta)
 	}
@@ -81,6 +58,9 @@ func NewModel() Model {
 	vp := viewport.New(m.width, m.height)
 	m.responseViewport = &vp
 	m.responseViewport.GotoBottom()
+
+	m.focused = 0
+	m.fields = []string{"methodField", "urlField", "tabContnet"}
 
 	return m
 }
@@ -110,21 +90,14 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, nil
 		case "shift+up":
 			m.response, m.status = send(m)
-			m.responseViewport.SetContent(m.response)
 			return m, nil
 
-		case "tab": // Example key to switch focus
-			if m.focused == "urlField" {
-				m.focused = "tabContent"
-			} else {
-
-				if m.focused == "tabContent" {
-					m.focused = "methodField"
-				} else {
-					m.focused = "urlField"
-				}
-
-			}
+		case "tab": // Switch focus when Tab is pressed
+			// Move to the next input field
+			m.focused = (m.focused + 1) % len(m.fields) // Circular focus navigation
+		case "shift+tab": // Move to the previous input field when Shift + Tab is pressed
+			// Move to the previous input field
+			m.focused = (m.focused - 1 + len(m.fields)) % len(m.fields)
 		}
 	}
 
@@ -132,19 +105,18 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	// Update based on focus
 	var cmd tea.Cmd
-	if m.focused == "urlField" {
+	switch m.focused {
+	case 1:
 		m.urlField, cmd = m.urlField.Update(msg)
 		cmds = append(cmds, cmd)
-	} else if m.focused == "methodField" {
+	case 0:
 		m.methodField, cmd = m.methodField.Update(msg)
 		cmds = append(cmds, cmd)
-	} else if m.focused == "tabContent" {
+	case 2:
+		// Update the active tab in the tabContent array
 		m.tabContent[m.activeTab], cmd = m.tabContent[m.activeTab].Update(msg)
 		cmds = append(cmds, cmd)
 	}
-
-	// Update response
-	//	m.responseViewport, cmd = m.responseViewport.Update(msg)
 	cmds = append(cmds, cmd)
 
 	// Combine all commands into a single tea.Cmd
@@ -152,6 +124,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m Model) View() string {
+
+	focusedBorder := lipgloss.NewStyle().Border(lipgloss.RoundedBorder(), true).BorderForeground(lipgloss.Color("205"))
 
 	doc := strings.Builder{}
 	var renderedTabs []string
@@ -179,28 +153,42 @@ func (m Model) View() string {
 	}
 
 	row := lipgloss.JoinHorizontal(lipgloss.Top, renderedTabs...)
-
 	doc.WriteString(row)
 	doc.WriteString("\n")
 	tabContent := windowStyle.Width(m.width - 60).Height(m.height - 9).Render(m.tabContent[m.activeTab].View())
 	doc.WriteString(tabContent)
 	requestPanel := doc.String()
 
-	vpHeight := 18
-	if m.height > 7 {
-		vpHeight = m.height - 7
+	if m.focused == 2 {
+		m.tabContent[m.activeTab].Focus()
 	}
 
-	m.responseViewport.Height = vpHeight
+	m.responseViewport.Height = m.height - 7
 	m.responseViewport.Width = m.width - 102
+	m.responseViewport.SetContent(m.response)
 
 	responsePanel := borderStyle.Width(m.width - 100).Height(m.height - 6).Render(titleStyle.Render(" Response: ") + headingStyle.Render(m.status) + "\n" + m.responseViewport.View())
-
 	mainPanel := lipgloss.JoinHorizontal(lipgloss.Center, requestPanel, responsePanel)
 
-	methodInput := borderStyle.Width(15).Height(1).Render(m.methodField.View())
-	cmdInput := borderStyle.Height(1).Width(m.width - 19).Render(m.urlField.View())
-	topPanel := lipgloss.JoinHorizontal(lipgloss.Left, methodInput, cmdInput)
+	// Render the Method input field
+	methodStyle := borderStyle
+	if m.focused == 0 {
+		m.tabContent[m.activeTab].Blur()
+		methodStyle = focusedBorder
+
+	}
+	methodInput := methodStyle.Width(15).Height(1).Render(m.methodField.View())
+
+	// Render the URL input field
+	urlStyle := borderStyle
+	if m.focused == 1 {
+		m.tabContent[m.activeTab].Blur()
+		urlStyle = focusedBorder
+
+	}
+	urlInput := urlStyle.Height(1).Width(m.width - 19).Render(m.urlField.View())
+
+	topPanel := lipgloss.JoinHorizontal(lipgloss.Left, methodInput, urlInput)
 
 	body := lipgloss.JoinVertical(lipgloss.Top, topPanel, mainPanel)
 
