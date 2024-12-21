@@ -9,6 +9,7 @@ import (
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/muesli/reflow/wordwrap"
 )
 
 type Model struct {
@@ -20,7 +21,7 @@ type Model struct {
 	methodField      textinput.Model
 	tabs             []string
 	tabContent       []textarea.Model
-	responseViewport *viewport.Model
+	responseViewport viewport.Model
 	activeTab        int
 	response         string
 	status           string
@@ -56,7 +57,7 @@ func NewModel() Model {
 	}
 
 	vp := viewport.New(m.width, m.height)
-	m.responseViewport = &vp
+	m.responseViewport = vp
 	m.responseViewport.GotoBottom()
 
 	m.focused = 0
@@ -90,13 +91,26 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, nil
 		case "shift+up":
 			m.response, m.status = send(m)
+			formattedResponse := formatJSON(m.response)
+			wrappedContent := wordwrap.String(formattedResponse, m.responseViewport.Width)
+			m.responseViewport.SetContent(wrappedContent)
 			return m, nil
 
 		case "tab":
 			m.focused = (m.focused + 1) % len(m.fields)
 		case "shift+tab":
 			m.focused = (m.focused - 1 + len(m.fields)) % len(m.fields)
+
+		case "up":
+			m.responseViewport.LineUp(1) // Scroll up
+		case "down":
+			m.responseViewport.LineDown(1) // Scroll down
+		case "pgup":
+			m.responseViewport.ViewUp() // Scroll up a full page
+		case "pgdown":
+			m.responseViewport.ViewDown() // Scroll down a full page
 		}
+
 	}
 
 	m.sizeInputs()
@@ -115,6 +129,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.tabContent[m.activeTab], cmd = m.tabContent[m.activeTab].Update(msg)
 		cmds = append(cmds, cmd)
 	}
+
+	m.responseViewport, cmd = m.responseViewport.Update(msg)
 	cmds = append(cmds, cmd)
 
 	// Combine all commands into a single tea.Cmd
@@ -122,6 +138,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m Model) View() string {
+
+	footer := m.appBoundaryView([]string{"Ctrl+c to quit", "Tab to move", "shift+up to send request", "shift+left-right to change tabs"})
 
 	focusedBorder := lipgloss.NewStyle().Border(lipgloss.RoundedBorder(), true).BorderForeground(lipgloss.Color("205"))
 
@@ -150,10 +168,12 @@ func (m Model) View() string {
 		renderedTabs = append(renderedTabs, style.Render(t))
 	}
 
+	tabContentWidth := int(float64(m.width) * 0.6)
+
 	row := lipgloss.JoinHorizontal(lipgloss.Top, renderedTabs...)
 	doc.WriteString(row)
 	doc.WriteString("\n")
-	tabContent := windowStyle.Width(m.width - 60).Height(m.height - 9).Render(m.tabContent[m.activeTab].View())
+	tabContent := windowStyle.Width(tabContentWidth).Height(m.height - 9).Render(m.tabContent[m.activeTab].View())
 	doc.WriteString(tabContent)
 	requestPanel := doc.String()
 
@@ -162,11 +182,10 @@ func (m Model) View() string {
 	}
 
 	m.responseViewport.Height = m.height - 7
-	m.responseViewport.Width = m.width - 102
-	m.responseViewport.SetContent(m.response)
+	m.responseViewport.Width = m.width - tabContentWidth - 2
 
-	responsePanel := borderStyle.Width(m.width - 100).Height(m.height - 6).Render(titleStyle.Render(" Response: ") + headingStyle.Render(m.status) + "\n" + m.responseViewport.View())
-	mainPanel := lipgloss.JoinHorizontal(lipgloss.Center, requestPanel, responsePanel)
+	responsePanel := borderStyle.Width(m.width - tabContentWidth - 2).Height(m.height - 6).Render(titleStyle.Render(" Response: ") + headingStyle.Render(m.status) + "\n" + m.responseViewport.View())
+	mainPanel := lipgloss.JoinHorizontal(lipgloss.Left, requestPanel, responsePanel)
 
 	// Render the Method input field
 	methodStyle := borderStyle
@@ -188,44 +207,12 @@ func (m Model) View() string {
 
 	body := lipgloss.JoinVertical(lipgloss.Top, topPanel, mainPanel)
 
-	return m.styles.Base.Render("gostman"+"\n"+body+"\n"+"Ctrl+h to view help,", "Ctrl+c to quit")
+	return m.styles.Base.Render(body + "\n" + footer)
 }
 
 func (m *Model) sizeInputs() {
 	for i := range m.tabContent {
-		m.tabContent[i].SetWidth(m.width - 60)
+		m.tabContent[i].SetWidth(int(float64(m.width) * 0.6))
 		m.tabContent[i].SetHeight(m.height - 9)
 	}
-}
-
-func max(a, b int) int {
-	if a > b {
-		return a
-	}
-	return b
-}
-
-func min(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
-}
-
-func newTextarea() textarea.Model {
-	t := textarea.New()
-	t.Prompt = ""
-	t.Placeholder = "Type something"
-	t.ShowLineNumbers = true
-	t.Cursor.Style = cursorStyle
-	t.FocusedStyle.Placeholder = focusedPlaceholderStyle
-	t.BlurredStyle.Placeholder = placeholderStyle
-	t.FocusedStyle.CursorLine = cursorLineStyle
-	t.FocusedStyle.Base = focusedBorderStyle
-	t.BlurredStyle.Base = blurredBorderStyle
-	t.FocusedStyle.EndOfBuffer = endOfBufferStyle
-	t.BlurredStyle.EndOfBuffer = endOfBufferStyle
-	t.KeyMap.DeleteWordBackward.SetEnabled(false)
-	t.Blur()
-	return t
 }
