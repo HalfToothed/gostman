@@ -6,6 +6,7 @@ import (
 
 	"github.com/charmbracelet/bubbles/textarea"
 	"github.com/charmbracelet/bubbles/textinput"
+	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
@@ -35,16 +36,19 @@ var (
 )
 
 type Model struct {
-	lg          *lipgloss.Renderer
-	styles      *Styles
-	width       int
-	height      int
-	urlField    textinput.Model
-	methodField textinput.Model
-	tabs        []string
-	tabContent  []textarea.Model
-	activeTab   int
-	focused     string
+	lg               *lipgloss.Renderer
+	styles           *Styles
+	width            int
+	height           int
+	urlField         textinput.Model
+	methodField      textinput.Model
+	tabs             []string
+	tabContent       []textarea.Model
+	responseViewport *viewport.Model
+	activeTab        int
+	focused          string
+	response         string
+	status           string
 }
 
 func NewModel() Model {
@@ -74,6 +78,10 @@ func NewModel() Model {
 		m.tabContent = append(m.tabContent, ta)
 	}
 
+	vp := viewport.New(m.width, m.height)
+	m.responseViewport = &vp
+	m.responseViewport.GotoBottom()
+
 	return m
 }
 
@@ -84,7 +92,7 @@ func (m Model) Init() tea.Cmd {
 
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
-	var cmd tea.Cmd
+	var cmds []tea.Cmd
 
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
@@ -94,11 +102,15 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch keypress := msg.String(); keypress {
 		case "ctrl+c":
 			return m, tea.Quit
-		case "shit+right":
+		case "shift+right":
 			m.activeTab = min(m.activeTab+1, len(m.tabs)-1)
 			return m, nil
 		case "shift+left":
 			m.activeTab = max(m.activeTab-1, 0)
+			return m, nil
+		case "shift+up":
+			m.response, m.status = send(m)
+			m.responseViewport.SetContent(m.response)
 			return m, nil
 
 		case "tab": // Example key to switch focus
@@ -119,15 +131,24 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	m.sizeInputs()
 
 	// Update based on focus
+	var cmd tea.Cmd
 	if m.focused == "urlField" {
 		m.urlField, cmd = m.urlField.Update(msg)
+		cmds = append(cmds, cmd)
 	} else if m.focused == "methodField" {
 		m.methodField, cmd = m.methodField.Update(msg)
+		cmds = append(cmds, cmd)
 	} else if m.focused == "tabContent" {
 		m.tabContent[m.activeTab], cmd = m.tabContent[m.activeTab].Update(msg)
+		cmds = append(cmds, cmd)
 	}
 
-	return m, cmd
+	// Update response
+	//	m.responseViewport, cmd = m.responseViewport.Update(msg)
+	cmds = append(cmds, cmd)
+
+	// Combine all commands into a single tea.Cmd
+	return m, tea.Batch(cmds...)
 }
 
 func (m Model) View() string {
@@ -163,10 +184,19 @@ func (m Model) View() string {
 	doc.WriteString("\n")
 	tabContent := windowStyle.Width(m.width - 60).Height(m.height - 9).Render(m.tabContent[m.activeTab].View())
 	doc.WriteString(tabContent)
+	requestPanel := doc.String()
 
-	cmdDesc := doc.String()
-	resPanel := borderStyle.Width(m.width - 102).Height(m.height - 6).Render(titleStyle.Render("Response"))
-	mainPanel := lipgloss.JoinHorizontal(lipgloss.Center, cmdDesc, resPanel)
+	vpHeight := 18
+	if m.height > 7 {
+		vpHeight = m.height - 7
+	}
+
+	m.responseViewport.Height = vpHeight
+	m.responseViewport.Width = m.width - 102
+
+	responsePanel := borderStyle.Width(m.width - 100).Height(m.height - 6).Render(titleStyle.Render(" Response: ") + headingStyle.Render(m.status) + "\n" + m.responseViewport.View())
+
+	mainPanel := lipgloss.JoinHorizontal(lipgloss.Center, requestPanel, responsePanel)
 
 	methodInput := borderStyle.Width(15).Height(1).Render(m.methodField.View())
 	cmdInput := borderStyle.Height(1).Width(m.width - 19).Render(m.urlField.View())
@@ -175,7 +205,6 @@ func (m Model) View() string {
 	body := lipgloss.JoinVertical(lipgloss.Top, topPanel, mainPanel)
 
 	return m.styles.Base.Render("gostman"+"\n"+body+"\n"+"Ctrl+h to view help,", "Ctrl+c to quit")
-
 }
 
 func (m *Model) sizeInputs() {

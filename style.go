@@ -23,14 +23,12 @@ type Styles struct {
 
 var titleStyle = lipgloss.NewStyle().
 	Background(lipgloss.Color("62")).
-	Foreground(lipgloss.Color("230")).
-	Padding(0, 2).
-	MarginLeft(2)
+	Foreground(lipgloss.Color("230"))
 
 var headingStyle = lipgloss.NewStyle().
 	Background(lipgloss.Color("11")).
 	Foreground(lipgloss.Color("0")).
-	Padding(0, 1)
+	MarginLeft(2)
 
 func NewStyles(lg *lipgloss.Renderer) *Styles {
 	s := Styles{}
