@@ -31,19 +31,20 @@ var (
 	highlightColor    = lipgloss.AdaptiveColor{Light: "#874BFD", Dark: "#7D56F4"}
 	inactiveTabStyle  = lipgloss.NewStyle().Border(inactiveTabBorder, true).BorderForeground(highlightColor).Padding(0, 1)
 	activeTabStyle    = inactiveTabStyle.Border(activeTabBorder, true)
-	windowStyle       = lipgloss.NewStyle().BorderForeground(highlightColor).Padding(2, 0).Align(lipgloss.Left).Border(lipgloss.NormalBorder()).UnsetBorderTop()
+	windowStyle       = lipgloss.NewStyle().BorderForeground(highlightColor).Align(lipgloss.Left)
 )
 
 type Model struct {
-	lg         *lipgloss.Renderer
-	styles     *Styles
-	width      int
-	height     int
-	inputField textinput.Model
-	tabs       []string
-	tabContent []textarea.Model
-	activeTab  int
-	focused    string
+	lg          *lipgloss.Renderer
+	styles      *Styles
+	width       int
+	height      int
+	urlField    textinput.Model
+	methodField textinput.Model
+	tabs        []string
+	tabContent  []textarea.Model
+	activeTab   int
+	focused     string
 }
 
 func NewModel() Model {
@@ -53,11 +54,16 @@ func NewModel() Model {
 	m.styles = NewStyles(m.lg)
 	m.tabs = []string{"Body", "Params", "Authorization", "Headers"}
 
-	m.inputField = textinput.New()
-	m.inputField.Placeholder = "URL"
-	m.inputField.Focus()
-	m.inputField.Cursor.Blink = false
-	m.focused = "inputField"
+	m.urlField = textinput.New()
+	m.urlField.Placeholder = "URL"
+	m.urlField.Focus()
+	m.urlField.Cursor.Blink = false
+	m.focused = "urlField"
+
+	m.methodField = textinput.New()
+	m.methodField.Placeholder = "METHOD"
+	m.methodField.Focus()
+	m.methodField.Cursor.Blink = false
 
 	// Initialize tab contents
 	for _, tab := range m.tabs {
@@ -88,18 +94,24 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch keypress := msg.String(); keypress {
 		case "ctrl+c":
 			return m, tea.Quit
-		case "right":
+		case "shit+right":
 			m.activeTab = min(m.activeTab+1, len(m.tabs)-1)
 			return m, nil
-		case "left":
+		case "shift+left":
 			m.activeTab = max(m.activeTab-1, 0)
 			return m, nil
 
 		case "tab": // Example key to switch focus
-			if m.focused == "inputField" {
+			if m.focused == "urlField" {
 				m.focused = "tabContent"
 			} else {
-				m.focused = "inputField"
+
+				if m.focused == "tabContent" {
+					m.focused = "methodField"
+				} else {
+					m.focused = "urlField"
+				}
+
 			}
 		}
 	}
@@ -107,8 +119,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	m.sizeInputs()
 
 	// Update based on focus
-	if m.focused == "inputField" {
-		m.inputField, cmd = m.inputField.Update(msg)
+	if m.focused == "urlField" {
+		m.urlField, cmd = m.urlField.Update(msg)
+	} else if m.focused == "methodField" {
+		m.methodField, cmd = m.methodField.Update(msg)
 	} else if m.focused == "tabContent" {
 		m.tabContent[m.activeTab], cmd = m.tabContent[m.activeTab].Update(msg)
 	}
@@ -151,12 +165,11 @@ func (m Model) View() string {
 	doc.WriteString(tabContent)
 
 	cmdDesc := doc.String()
-	resPanel := borderStyle.Width(m.width - 102).Height(m.height - 7).Render(titleStyle.Render("Response"))
-	mainPanel := lipgloss.JoinHorizontal(lipgloss.Left, cmdDesc, resPanel)
+	resPanel := borderStyle.Width(m.width - 102).Height(m.height - 6).Render(titleStyle.Render("Response"))
+	mainPanel := lipgloss.JoinHorizontal(lipgloss.Center, cmdDesc, resPanel)
 
-	methodInput := borderStyle.Width(15).Height(1).Render(m.inputField.View())
-	cmdInput := borderStyle.Height(1).Width(m.width - 19).Render(m.inputField.View())
-
+	methodInput := borderStyle.Width(15).Height(1).Render(m.methodField.View())
+	cmdInput := borderStyle.Height(1).Width(m.width - 19).Render(m.urlField.View())
 	topPanel := lipgloss.JoinHorizontal(lipgloss.Left, methodInput, cmdInput)
 
 	body := lipgloss.JoinVertical(lipgloss.Top, topPanel, mainPanel)
@@ -167,8 +180,8 @@ func (m Model) View() string {
 
 func (m *Model) sizeInputs() {
 	for i := range m.tabContent {
-		m.tabContent[i].SetWidth(m.width - 65)
-		m.tabContent[i].SetHeight(m.height - 16)
+		m.tabContent[i].SetWidth(m.width - 60)
+		m.tabContent[i].SetHeight(m.height - 9)
 	}
 }
 
