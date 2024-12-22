@@ -43,17 +43,13 @@ func newTextarea() textarea.Model {
 func formatJSON(input string) string {
 	var rawData interface{}
 
-	// Attempt to decode the JSON
 	err := json.Unmarshal([]byte(input), &rawData)
 	if err != nil {
-		// Return the raw string if it's not valid JSON
 		return input
 	}
 
-	// Encode the JSON with indentation for pretty formatting
 	prettyJSON, err := json.MarshalIndent(rawData, "", "  ")
 	if err != nil {
-		// If formatting fails, return the raw string
 		return input
 	}
 

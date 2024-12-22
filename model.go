@@ -58,10 +58,9 @@ func NewModel() Model {
 
 	vp := viewport.New(m.width, m.height)
 	m.responseViewport = vp
-	m.responseViewport.GotoBottom()
 
 	m.focused = 0
-	m.fields = []string{"methodField", "urlField", "tabContnet"}
+	m.fields = []string{"methodField", "urlField", "tabContnet", "responseViewport"}
 
 	return m
 }
@@ -77,12 +76,18 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
-		m.width = msg.Width
+
+		if msg.Width > 92 {
+			m.width = msg.Width
+		}
 		m.height = msg.Height
 	case tea.KeyMsg:
 		switch keypress := msg.String(); keypress {
 		case "ctrl+c":
 			return m, tea.Quit
+		case "alt+`":
+			help := newHelp(m.width, m.height, m.styles, m)
+			return help, nil
 		case "shift+right":
 			m.activeTab = min(m.activeTab+1, len(m.tabs)-1)
 			return m, nil
@@ -94,6 +99,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			formattedResponse := formatJSON(m.response)
 			wrappedContent := wordwrap.String(formattedResponse, m.responseViewport.Width)
 			m.responseViewport.SetContent(wrappedContent)
+			m.responseViewport.GotoTop()
 			return m, nil
 
 		case "tab":
@@ -136,10 +142,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	// Combine all commands into a single tea.Cmd
 	return m, tea.Batch(cmds...)
 }
-
 func (m Model) View() string {
 
-	footer := m.appBoundaryView([]string{"Ctrl+c to quit", "Tab to move", "shift+up to send request", "shift+left-right to change tabs"})
+	footer := m.appBoundaryView([]string{"Ctrl+c to quit", "alt+` to help"})
 
 	focusedBorder := lipgloss.NewStyle().Border(lipgloss.RoundedBorder(), true).BorderForeground(lipgloss.Color("205"))
 
@@ -168,7 +173,7 @@ func (m Model) View() string {
 		renderedTabs = append(renderedTabs, style.Render(t))
 	}
 
-	tabContentWidth := int(float64(m.width) * 0.6)
+	tabContentWidth := int(float64(m.width) * 0.5)
 
 	row := lipgloss.JoinHorizontal(lipgloss.Top, renderedTabs...)
 	doc.WriteString(row)
@@ -212,7 +217,7 @@ func (m Model) View() string {
 
 func (m *Model) sizeInputs() {
 	for i := range m.tabContent {
-		m.tabContent[i].SetWidth(int(float64(m.width) * 0.6))
+		m.tabContent[i].SetWidth(int(float64(m.width) * 0.5))
 		m.tabContent[i].SetHeight(m.height - 9)
 	}
 }
