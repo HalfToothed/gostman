@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/charmbracelet/bubbles/textarea"
@@ -35,7 +34,7 @@ func NewModel() Model {
 	m := Model{width: maxWidth}
 	m.lg = lipgloss.DefaultRenderer()
 	m.styles = NewStyles(m.lg)
-	m.tabs = []string{"Body", "Params", "Authorization", "Headers"}
+	m.tabs = []string{"Body", "Params", "Headers"}
 
 	m.urlField = textinput.New()
 	m.urlField.Placeholder = "URL"
@@ -49,14 +48,20 @@ func NewModel() Model {
 	m.methodField.Cursor.Blink = false
 
 	// Initialize tab contents
-	for _, tab := range m.tabs {
+	for range m.tabs {
 		ta := newTextarea()
-		ta.Placeholder = fmt.Sprintf("Write something in %s...", tab)
 		ta.Cursor.Blink = false
 		m.tabContent = append(m.tabContent, ta)
 	}
 
-	m.tabContent[3].SetValue(createHeaders())
+	m.tabContent[1].Placeholder = `
+	write Query Params in key-value format
+
+{
+	"key":"value"
+}`
+
+	m.tabContent[2].SetValue(createHeaders())
 
 	vp := viewport.New(m.width, m.height)
 	m.responseViewport = vp
@@ -78,10 +83,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
-
-		if msg.Width > 92 {
-			m.width = msg.Width
-		}
+		m.width = msg.Width
 		m.height = msg.Height
 	case tea.KeyMsg:
 		switch keypress := msg.String(); keypress {
