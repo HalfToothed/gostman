@@ -2,10 +2,8 @@ package main
 
 import (
 	"encoding/json"
-	"strings"
 
 	"github.com/charmbracelet/bubbles/textarea"
-	"github.com/charmbracelet/lipgloss"
 )
 
 func max(a, b int) int {
@@ -56,14 +54,27 @@ func formatJSON(input string) string {
 	return string(prettyJSON)
 }
 
-func (m Model) appBoundaryView(textItems []string) string {
-	builder := strings.Builder{}
-	builder.WriteString(m.styles.HeaderDecoration.Render("+--"))
-	for i, textItem := range textItems {
-		if i > 0 {
-			builder.WriteString(m.styles.HeaderDecoration.Render("/////"))
-		}
-		builder.WriteString(m.styles.HeaderText.Render(textItem))
+func createHeaders() string {
+
+	var rawData interface{}
+
+	headers := `
+	{
+		"Content-Type":"application/json",
+		"Accept":"*/*",
+		"Accept-Encoding":"gzip, deflate, br",
+		"Connection":"keep-alive"
+	}`
+
+	err := json.Unmarshal([]byte(headers), &rawData)
+	if err != nil {
+		return headers
 	}
-	return lipgloss.PlaceHorizontal(m.width, lipgloss.Left, builder.String(), lipgloss.WithWhitespaceChars("/"), lipgloss.WithWhitespaceForeground(indigo))
+
+	prettyJSON, err := json.MarshalIndent(rawData, "", "  ")
+	if err != nil {
+		return headers
+	}
+
+	return string(prettyJSON)
 }

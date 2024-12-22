@@ -93,7 +93,3 @@ func (m help) View() string {
 
 	return m.styles.Base.Render(header + "\n" + body + "\n" + footer)
 }
-
-func (m help) appBoundaryView(text string) string {
-	return lipgloss.PlaceHorizontal(m.width, lipgloss.Left, m.styles.HeaderText.Render("+-- "+text), lipgloss.WithWhitespaceChars("/"), lipgloss.WithWhitespaceForeground(indigo))
-}

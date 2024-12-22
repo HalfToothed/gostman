@@ -106,3 +106,11 @@ var (
 	activeTabStyle    = inactiveTabStyle.Border(activeTabBorder, true)
 	windowStyle       = lipgloss.NewStyle().BorderForeground(highlightColor).Align(lipgloss.Left)
 )
+
+func (m help) appBoundaryView(text string) string {
+	return lipgloss.PlaceHorizontal(m.width, lipgloss.Left, m.styles.HeaderText.Render("+-- "+text), lipgloss.WithWhitespaceChars("/"), lipgloss.WithWhitespaceForeground(indigo))
+}
+
+func (m Model) appBoundaryView(text string) string {
+	return lipgloss.PlaceHorizontal(m.width, lipgloss.Left, m.styles.HeaderText.Render("+-- "+text), lipgloss.WithWhitespaceChars("/"), lipgloss.WithWhitespaceForeground(indigo))
+}

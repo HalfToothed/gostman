@@ -56,6 +56,8 @@ func NewModel() Model {
 		m.tabContent = append(m.tabContent, ta)
 	}
 
+	m.tabContent[3].SetValue(createHeaders())
+
 	vp := viewport.New(m.width, m.height)
 	m.responseViewport = vp
 
@@ -144,7 +146,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 func (m Model) View() string {
 
-	footer := m.appBoundaryView([]string{"Ctrl+c to quit", "alt+` to help"})
+	footer := m.appBoundaryView("Ctrl+c to quit, alt+` to help")
 
 	focusedBorder := lipgloss.NewStyle().Border(lipgloss.RoundedBorder(), true).BorderForeground(lipgloss.Color("205"))
 
