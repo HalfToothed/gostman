@@ -23,9 +23,14 @@ type Styles struct {
 
 var (
 	borderStyle = lipgloss.NewStyle().
-		Padding(0, 0).
-		Border(lipgloss.RoundedBorder()).
-		BorderForeground(lipgloss.Color("62"))
+			Padding(0, 0).
+			Border(lipgloss.RoundedBorder()).
+			BorderForeground(lipgloss.Color("62"))
+
+	darkStyle = lipgloss.NewStyle().
+			Padding(0, 0).
+			Border(lipgloss.NormalBorder()).
+			BorderForeground(lipgloss.Color("360"))
 )
 
 var titleStyle = lipgloss.NewStyle().

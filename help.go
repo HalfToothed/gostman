@@ -1,7 +1,6 @@
 package main
 
 import (
-	"github.com/charmbracelet/bubbles/table"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
@@ -21,30 +20,6 @@ type help struct {
 }
 
 func newHelp(width, height int, styles *Styles, returnModel tea.Model) help {
-	columns := []table.Column{
-		{Title: "Command", Width: (width / 2) - 13},
-		{Title: "Description", Width: (width / 2) + 7},
-	}
-	commandsTable := table.New(
-		table.WithColumns(columns),
-		table.WithFocused(false),
-		table.WithHeight(height-12),
-	)
-	s := table.DefaultStyles()
-	s.Header = s.Header.
-		BorderStyle(lipgloss.HiddenBorder()).
-		Background(lipgloss.Color("62")).
-		Foreground(lipgloss.Color("230")).
-		BorderBottom(false).
-		Bold(false)
-	s.Selected = s.Selected.
-		Foreground(lipgloss.Color("7")).
-		Background(lipgloss.Color("0")).
-		Bold(false).
-		Margin(0, 0, 0, 0).
-		Padding(0, 0, 0, 0)
-	commandsTable.SetStyles(s)
-
 	return help{
 		width:       width,
 		height:      height,
