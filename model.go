@@ -99,13 +99,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "alt+`":
 			help := newHelp(m.width, m.height, m.styles, m)
 			return help, nil
-		case "shift+down":
-			dashboard := dashboard(m.width, m.height, m.styles, m)
-			return dashboard, nil
-		case "shift+right":
+		case "ctrl+right":
 			m.activeTab = min(m.activeTab+1, len(m.tabs)-1)
 			return m, nil
-		case "shift+left":
+		case "ctrl+left":
 			m.activeTab = max(m.activeTab-1, 0)
 			return m, nil
 		case "shift+up":
@@ -115,6 +112,12 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.responseViewport.SetContent(wrappedContent)
 			m.responseViewport.GotoTop()
 			return m, nil
+		case "shift+left":
+			dashboard := dashboard(m.width, m.height, m.styles, m)
+			return dashboard, nil
+
+		case "ctrl+s":
+			save(m)
 
 		case "tab":
 			m.focused = (m.focused + 1) % len(m.fields)
@@ -201,6 +204,8 @@ func (m Model) View() string {
 
 	if m.focused == 3 {
 		m.tabContent[m.activeTab].Focus()
+	} else {
+		m.tabContent[m.activeTab].Blur()
 	}
 
 	m.responseViewport.Height = m.height - 7
@@ -211,25 +216,31 @@ func (m Model) View() string {
 
 	nameStyle := darkStyle
 	if m.focused == 0 {
-		m.tabContent[m.activeTab].Blur()
+		m.nameField.Focus()
 		nameStyle = focusedBorder
 
+	} else {
+		m.nameField.Blur()
 	}
 	nameInput := nameStyle.Width(25).Height(1).Render(m.nameField.View())
 
 	// Render the Method input field
 	methodStyle := borderStyle
 	if m.focused == 1 {
-		m.tabContent[m.activeTab].Blur()
+		m.methodField.Focus()
 		methodStyle = focusedBorder
+	} else {
+		m.methodField.Blur()
 	}
 	methodInput := methodStyle.Width(15).Height(1).Render(m.methodField.View())
 
 	// Render the URL input field
 	urlStyle := borderStyle
 	if m.focused == 2 {
-		m.tabContent[m.activeTab].Blur()
+		m.urlField.Focus()
 		urlStyle = focusedBorder
+	} else {
+		m.urlField.Blur()
 	}
 	urlInput := urlStyle.Height(1).Width(m.width - 50).Render(m.urlField.View())
 
