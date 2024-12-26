@@ -7,6 +7,8 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+
+	"github.com/google/uuid"
 )
 
 var appDataPath = os.Getenv("APPDATA")
@@ -15,6 +17,7 @@ var jsonfilePath = filepath.Join(appFolder, "gostman.json")
 
 // Request represents the structure of a single saved request
 type Request struct {
+	Id          string `json:"id"`
 	Name        string `json:"name"`
 	URL         string `json:"url"`
 	Method      string `json:"method"`
@@ -49,11 +52,8 @@ func SaveRequests(request Request) {
 	}
 
 	var savedRequests []Request
-
 	json.Unmarshal(file, &savedRequests)
-
 	savedRequests = append(savedRequests, request)
-
 	updatedData, err := json.MarshalIndent(savedRequests, "", " ")
 
 	if err != nil {
@@ -63,13 +63,12 @@ func SaveRequests(request Request) {
 	if err := os.WriteFile(jsonfilePath, updatedData, 0644); err != nil {
 		fmt.Println("failed to add the request")
 	}
-
 }
 
 func save(m Model) {
 	// Example request data
 	request := Request{
-
+		Id:          uuid.New().String(),
 		Name:        m.nameField.Value(),
 		URL:         m.urlField.Value(),
 		Method:      m.methodField.Value(),
@@ -82,8 +81,6 @@ func save(m Model) {
 }
 
 func checkFileExists(filepath string) bool {
-
 	_, err := os.Stat(filepath)
-
 	return errors.Is(err, os.ErrNotExist)
 }
