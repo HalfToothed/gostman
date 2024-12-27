@@ -32,13 +32,10 @@ func dashboard(width, height int, styles *Styles, returnModel tea.Model, model *
 	var savedRequests []Request
 
 	if !checkFileExists(jsonfilePath) {
-
 		file, err := os.ReadFile(jsonfilePath)
-
 		if err != nil {
 			panic(err)
 		}
-
 		json.Unmarshal(file, &savedRequests)
 	}
 
@@ -93,7 +90,6 @@ func (m board) View() string {
 
 	header := m.appBoundaryView("Dashboard")
 	body := docStyle.Render(m.list.View())
-
 	footer := m.appBoundaryView("<ESC> to go back")
 
 	return m.styles.Base.Render(header + "\n" + body + "\n" + footer)

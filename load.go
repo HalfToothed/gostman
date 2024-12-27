@@ -2,6 +2,7 @@ package main
 
 func load(data Request, model *Model) {
 
+	model.id = data.Id
 	model.nameField.SetValue(data.Name)
 	model.urlField.SetValue(data.URL)
 	model.methodField.SetValue(data.Method)

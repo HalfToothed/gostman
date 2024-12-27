@@ -53,7 +53,22 @@ func SaveRequests(request Request) {
 
 	var savedRequests []Request
 	json.Unmarshal(file, &savedRequests)
-	savedRequests = append(savedRequests, request)
+
+	if request.Id == "" {
+
+		request.Id = uuid.New().String()
+		savedRequests = append(savedRequests, request)
+
+	} else {
+
+		for i, r := range savedRequests {
+			if r.Id == request.Id {
+				savedRequests[i] = request
+				break
+			}
+		}
+	}
+
 	updatedData, err := json.MarshalIndent(savedRequests, "", " ")
 
 	if err != nil {
@@ -63,12 +78,13 @@ func SaveRequests(request Request) {
 	if err := os.WriteFile(jsonfilePath, updatedData, 0644); err != nil {
 		fmt.Println("failed to add the request")
 	}
+
 }
 
 func save(m Model) {
 	// Example request data
 	request := Request{
-		Id:          uuid.New().String(),
+		Id:          m.id,
 		Name:        m.nameField.Value(),
 		URL:         m.urlField.Value(),
 		Method:      m.methodField.Value(),

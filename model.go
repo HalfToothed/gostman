@@ -3,6 +3,7 @@ package main
 import (
 	"strings"
 
+	"github.com/charmbracelet/bubbles/spinner"
 	"github.com/charmbracelet/bubbles/textarea"
 	"github.com/charmbracelet/bubbles/textinput"
 	"github.com/charmbracelet/bubbles/viewport"
@@ -25,9 +26,12 @@ type Model struct {
 	activeTab        int
 	response         string
 	status           string
-
-	focused int
-	fields  []string
+	id               string
+	focused          int
+	fields           []string
+	spinner          spinner.Model
+	message          string
+	loading          bool
 }
 
 func NewModel() Model {
@@ -35,6 +39,7 @@ func NewModel() Model {
 	m := Model{width: maxWidth}
 	m.lg = lipgloss.DefaultRenderer()
 	m.styles = NewStyles(m.lg)
+	m.id = ""
 	m.tabs = []string{"Body", "Params", "Headers"}
 
 	m.nameField = textinput.New()
@@ -76,16 +81,22 @@ func NewModel() Model {
 	m.focused = 0
 	m.fields = []string{"nameField", "methodField", "urlField", "tabContnet"}
 
+	m.spinner = spinner.New()
+	m.spinner.Spinner = spinner.Dot
+	m.spinner.Style = lipgloss.NewStyle().Foreground(lipgloss.Color("205"))
+	m.message = m.appBoundaryView("Ctrl+c to quit, alt+` to help")
+	m.loading = false
+
 	return m
 }
 
 // Init is run once when the program starts
 func (m Model) Init() tea.Cmd {
-	return nil
+	return m.spinner.Tick
 }
 
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-
+	var cmd tea.Cmd
 	var cmds []tea.Cmd
 
 	switch msg := msg.(type) {
@@ -97,6 +108,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+c":
 			return m, tea.Quit
 		case "alt+`":
+			cmd = tea.EnterAltScreen
 			help := newHelp(m.width, m.height, m.styles, m)
 			return help, nil
 		case "ctrl+right":
@@ -106,12 +118,19 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.activeTab = max(m.activeTab-1, 0)
 			return m, nil
 		case "shift+up":
+
+			m.loading = true
+			m.message = "Sending Request...."
+
+			m.spinner, cmd = m.spinner.Update(msg)
+			cmds = append(cmds, cmd)
+
 			m.response, m.status = send(m)
 			formattedResponse := formatJSON(m.response)
 			wrappedContent := wordwrap.String(formattedResponse, m.responseViewport.Width)
 			m.responseViewport.SetContent(wrappedContent)
 			m.responseViewport.GotoTop()
-			return m, nil
+
 		case "shift+left":
 			dashboard := dashboard(m.width, m.height, m.styles, m, &m)
 			return dashboard, nil
@@ -131,13 +150,11 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "pgdown":
 			m.responseViewport.ViewDown() // Scroll down a full page
 		}
-
 	}
 
 	m.sizeInputs()
 
 	// Update based on focus
-	var cmd tea.Cmd
 	switch m.focused {
 	case 0:
 		m.nameField, cmd = m.nameField.Update(msg)
@@ -162,8 +179,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 func (m Model) View() string {
 
-	footer := m.appBoundaryView("Ctrl+c to quit, alt+` to help")
-
+	var footer string
 	focusedBorder := lipgloss.NewStyle().Border(lipgloss.RoundedBorder(), true).BorderForeground(lipgloss.Color("205"))
 
 	doc := strings.Builder{}
@@ -240,11 +256,18 @@ func (m Model) View() string {
 	} else {
 		m.urlField.Blur()
 	}
-	urlInput := urlStyle.Height(1).Width(m.width - 50).Render(m.urlField.View())
+	urlInput := urlStyle.Height(1).Width(m.width - 46).Render(m.urlField.View())
 
 	topPanel := lipgloss.JoinHorizontal(lipgloss.Left, nameInput, methodInput, urlInput)
 
 	body := lipgloss.JoinVertical(lipgloss.Top, topPanel, mainPanel)
+
+	if m.loading {
+		spinnerView := m.spinner.View()
+		footer = spinnerView + m.message
+	} else {
+		footer = m.message
+	}
 
 	return m.styles.Base.Render(body + "\n" + footer)
 }
