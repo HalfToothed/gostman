@@ -25,9 +25,10 @@ type board struct {
 	styles      *Styles
 	list        list.Model
 	returnModel tea.Model
+	model       *Model
 }
 
-func dashboard(width, height int, styles *Styles, returnModel tea.Model) board {
+func dashboard(width, height int, styles *Styles, returnModel tea.Model, model *Model) board {
 	var savedRequests []Request
 
 	if !checkFileExists(jsonfilePath) {
@@ -53,6 +54,7 @@ func dashboard(width, height int, styles *Styles, returnModel tea.Model) board {
 		styles:      styles,
 		list:        list.New(items, list.NewDefaultDelegate(), width, height-2),
 		returnModel: returnModel,
+		model:       model,
 	}
 
 	board.list.Title = "Requests "
@@ -72,6 +74,11 @@ func (m board) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		if msg.String() == "esc" {
 			return m.returnModel, nil
+		}
+		if msg.String() == "enter" {
+			data := m.list.SelectedItem().(listItem)
+			load(data.request, m.model)
+			return m.model, nil
 		}
 	case tea.WindowSizeMsg:
 		m.list.SetSize(msg.Width, msg.Height-2)

@@ -113,12 +113,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.responseViewport.GotoTop()
 			return m, nil
 		case "shift+left":
-			dashboard := dashboard(m.width, m.height, m.styles, m)
+			dashboard := dashboard(m.width, m.height, m.styles, m, &m)
 			return dashboard, nil
-
 		case "ctrl+s":
 			save(m)
-
 		case "tab":
 			m.focused = (m.focused + 1) % len(m.fields)
 		case "shift+tab":
