@@ -3,8 +3,19 @@ package main
 import (
 	"encoding/json"
 
+	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/textarea"
 )
+
+type responseMsg struct {
+	response string
+	status   string
+}
+
+type saveMsg struct {
+	success bool
+	message string
+}
 
 func max(a, b int) int {
 	if a > b {
@@ -77,4 +88,21 @@ func createHeaders() string {
 	}
 
 	return string(prettyJSON)
+}
+
+type keymap struct {
+	Back key.Binding
+	Quit key.Binding
+}
+
+// Keymap reusable key mappings shared across models
+var Keymap = keymap{
+	Back: key.NewBinding(
+		key.WithKeys("esc"),
+		key.WithHelp("esc", "back"),
+	),
+	Quit: key.NewBinding(
+		key.WithKeys("ctrl+c", "q"),
+		key.WithHelp("ctrl+c/q", "quit"),
+	),
 }

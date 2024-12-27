@@ -125,17 +125,35 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.spinner, cmd = m.spinner.Update(msg)
 			cmds = append(cmds, cmd)
 
-			m.response, m.status = send(m)
-			formattedResponse := formatJSON(m.response)
-			wrappedContent := wordwrap.String(formattedResponse, m.responseViewport.Width)
-			m.responseViewport.SetContent(wrappedContent)
-			m.responseViewport.GotoTop()
+			// Perform the async operation in a goroutine
+			return m, func() tea.Msg {
+				response, status := send(m) // Simulate the send function
+				formattedResponse := formatJSON(response)
+				return responseMsg{
+					response: formattedResponse,
+					status:   status,
+				}
+			}
 
 		case "shift+left":
 			dashboard := dashboard(m.width, m.height, m.styles, m, &m)
 			return dashboard, nil
 		case "ctrl+s":
-			save(m)
+
+			m.loading = true
+			m.message = "Saving Request...."
+			m.spinner, cmd = m.spinner.Update(msg)
+			cmds = append(cmds, cmd)
+
+			// Perform the async save operation in a goroutine
+			return m, func() tea.Msg {
+				save(m)
+				return saveMsg{
+					success: true,
+					message: "Request Saved Successfully!",
+				}
+			}
+
 		case "tab":
 			m.focused = (m.focused + 1) % len(m.fields)
 		case "shift+tab":
@@ -153,6 +171,23 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	}
 
 	m.sizeInputs()
+
+	// Handle custom messages for async tasks
+	switch msg := msg.(type) {
+	case responseMsg:
+		m.response = msg.response
+		m.status = msg.status
+		m.loading = false
+		m.message = "Request Sent!"
+
+		wrappedContent := wordwrap.String(msg.response, m.responseViewport.Width)
+		m.responseViewport.SetContent(wrappedContent)
+		m.responseViewport.GotoTop()
+
+	case saveMsg:
+		m.loading = false
+		m.message = msg.message
+	}
 
 	// Update based on focus
 	switch m.focused {

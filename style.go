@@ -117,9 +117,5 @@ func (m help) appBoundaryView(text string) string {
 }
 
 func (m Model) appBoundaryView(text string) string {
-	return lipgloss.PlaceHorizontal(m.width, lipgloss.Left, m.styles.HeaderText.Render("+-- "+text), lipgloss.WithWhitespaceChars("/"), lipgloss.WithWhitespaceForeground(indigo))
-}
-
-func (m board) appBoundaryView(text string) string {
-	return lipgloss.PlaceHorizontal(m.width, lipgloss.Left, m.styles.HeaderText.Render("+-- "+text), lipgloss.WithWhitespaceChars("/"), lipgloss.WithWhitespaceForeground(indigo))
+	return lipgloss.PlaceHorizontal(m.width, lipgloss.Left, m.styles.HeaderText.Render("+-- "+text), lipgloss.WithWhitespaceForeground(indigo))
 }

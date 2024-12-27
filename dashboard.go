@@ -4,12 +4,10 @@ import (
 	"encoding/json"
 	"os"
 
+	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
 )
-
-var docStyle = lipgloss.NewStyle().Margin(0, 0)
 
 type listItem struct {
 	request Request
@@ -54,7 +52,13 @@ func dashboard(width, height int, styles *Styles, returnModel tea.Model, model *
 		model:       model,
 	}
 
-	board.list.Title = "Requests "
+	board.list.Title = "List of Requests "
+
+	board.list.AdditionalShortHelpKeys = func() []key.Binding {
+		return []key.Binding{
+			Keymap.Back,
+		}
+	}
 
 	return board
 }
@@ -88,9 +92,6 @@ func (m board) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m board) View() string {
 
-	header := m.appBoundaryView("Dashboard")
-	body := docStyle.Render(m.list.View())
-	footer := m.appBoundaryView("<ESC> to go back")
-
-	return m.styles.Base.Render(header + "\n" + body + "\n" + footer)
+	body := borderStyle.Width(m.width - 4).Render(m.list.View())
+	return m.styles.Base.Render(body)
 }
