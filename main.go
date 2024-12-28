@@ -1,13 +1,14 @@
 package main
 
 import (
+	"gostman/cmd"
 	"log"
 
 	tea "github.com/charmbracelet/bubbletea"
 )
 
 func main() {
-	p := tea.NewProgram(NewModel(),
+	p := tea.NewProgram(cmd.NewModel(),
 		tea.WithAltScreen(),
 		tea.WithMouseCellMotion(),
 	)
