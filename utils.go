@@ -91,12 +91,22 @@ func createHeaders() string {
 }
 
 type keymap struct {
-	Back key.Binding
-	Quit key.Binding
+	Create key.Binding
+	Delete key.Binding
+	Back   key.Binding
+	Quit   key.Binding
 }
 
 // Keymap reusable key mappings shared across models
 var Keymap = keymap{
+	Create: key.NewBinding(
+		key.WithKeys("n"),
+		key.WithHelp("n", "create"),
+	),
+	Delete: key.NewBinding(
+		key.WithKeys("d"),
+		key.WithHelp("d", "delete"),
+	),
 	Back: key.NewBinding(
 		key.WithKeys("esc"),
 		key.WithHelp("esc", "back"),

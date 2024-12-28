@@ -45,6 +45,7 @@ func NewModel() Model {
 	m.nameField = textinput.New()
 	m.nameField.Cursor.Blink = false
 	m.nameField.SetValue("New Request")
+	m.nameField.Placeholder = "Name"
 	m.nameField.Focus()
 	m.nameField.CharLimit = 22
 

@@ -56,6 +56,8 @@ func dashboard(width, height int, styles *Styles, returnModel tea.Model, model *
 
 	board.list.AdditionalShortHelpKeys = func() []key.Binding {
 		return []key.Binding{
+			Keymap.Create,
+			Keymap.Delete,
 			Keymap.Back,
 		}
 	}
@@ -80,6 +82,31 @@ func (m board) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			data := m.list.SelectedItem().(listItem)
 			load(data.request, m.model)
 			return m.model, nil
+		}
+		if msg.String() == "n" {
+			newModel := NewModel()
+			newModel.width = m.width
+			newModel.height = m.height
+			newModel.styles = m.styles
+			return newModel, nil
+		}
+		if msg.String() == "d" {
+			data := m.list.SelectedItem().(listItem)
+			err := delete(data.request.Id)
+			if err != nil {
+				return m.returnModel, nil
+			}
+
+			// Remove the item from the list
+			newItems := []list.Item{}
+			for i, item := range m.list.Items() {
+				if i != m.list.Index() {
+					newItems = append(newItems, item)
+				}
+			}
+
+			// Update the list with new items
+			m.list.SetItems(newItems)
 		}
 	case tea.WindowSizeMsg:
 		m.list.SetSize(msg.Width, msg.Height-2)
