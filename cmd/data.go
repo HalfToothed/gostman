@@ -106,6 +106,7 @@ func load(data Request, model *Model) {
 	model.tabContent[1].SetValue(data.QueryParams)
 	model.tabContent[2].SetValue(data.Headers)
 	model.response = data.Response
+	model.responseViewport.SetContent(model.response)
 }
 
 func delete(id string) error {

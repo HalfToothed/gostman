@@ -181,7 +181,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.loading = false
 		m.message = "Request Sent!"
 
-		wrappedContent := wordwrap.String(msg.response, m.responseViewport.Width)
+		wrappedContent := wordwrap.String(m.response, m.responseViewport.Width)
 		m.responseViewport.SetContent(wrappedContent)
 		m.responseViewport.GotoTop()
 
