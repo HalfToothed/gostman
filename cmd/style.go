@@ -27,10 +27,7 @@ var (
 			Border(lipgloss.RoundedBorder()).
 			BorderForeground(lipgloss.Color("62"))
 
-	darkStyle = lipgloss.NewStyle().
-			Padding(0, 0).
-			Border(lipgloss.NormalBorder()).
-			BorderForeground(lipgloss.Color("360"))
+	focusedBorder = lipgloss.NewStyle().Border(lipgloss.RoundedBorder(), true).BorderForeground(lipgloss.Color("205"))
 )
 
 var titleStyle = lipgloss.NewStyle().
@@ -47,7 +44,7 @@ func NewStyles(lg *lipgloss.Renderer) *Styles {
 	s.Base = lg.NewStyle().
 		Padding(0, 0, 0, 0)
 	s.HeaderText = lg.NewStyle().
-		Foreground(indigo).
+		Foreground(green).
 		Bold(true).
 		Padding(0, 1, 0, 0)
 	s.HeaderDecoration = lg.NewStyle().
@@ -85,14 +82,6 @@ var (
 
 	focusedPlaceholderStyle = lipgloss.NewStyle().
 				Foreground(lipgloss.Color("99"))
-
-	focusedBorderStyle = lipgloss.NewStyle().
-				Border(lipgloss.RoundedBorder()).
-				BorderForeground(lipgloss.Color("205"))
-
-	blurredBorderStyle = lipgloss.NewStyle().
-				Border(lipgloss.RoundedBorder()).
-				BorderForeground(lipgloss.Color("62"))
 )
 
 func tabBorderWithBottom(left, middle, right string) lipgloss.Border {
@@ -107,9 +96,8 @@ var (
 	inactiveTabBorder = tabBorderWithBottom("┴", "─", "┴")
 	activeTabBorder   = tabBorderWithBottom("┘", " ", "└")
 	highlightColor    = lipgloss.AdaptiveColor{Light: "#874BFD", Dark: "#7D56F4"}
-	inactiveTabStyle  = lipgloss.NewStyle().Border(inactiveTabBorder, true).BorderForeground(highlightColor).Padding(0, 1)
+	inactiveTabStyle  = lipgloss.NewStyle().Border(inactiveTabBorder, true).BorderForeground(highlightColor).Padding(0, 2)
 	activeTabStyle    = inactiveTabStyle.Border(activeTabBorder, true)
-	windowStyle       = lipgloss.NewStyle().BorderForeground(highlightColor).Align(lipgloss.Left)
 )
 
 func (m help) appBoundaryView(text string) string {
@@ -117,5 +105,9 @@ func (m help) appBoundaryView(text string) string {
 }
 
 func (m Model) appBoundaryView(text string) string {
-	return lipgloss.PlaceHorizontal(m.width, lipgloss.Left, m.styles.HeaderText.Render("+-- "+text), lipgloss.WithWhitespaceForeground(indigo))
+	return lipgloss.PlaceHorizontal(m.width, lipgloss.Left, m.styles.HeaderText.Render("+-- "+text))
+}
+
+func (m Model) appBoundaryMessage(text string) string {
+	return lipgloss.PlaceHorizontal(m.width, lipgloss.Left, m.styles.ErrorHeaderText.Render(text))
 }

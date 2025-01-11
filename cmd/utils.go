@@ -5,6 +5,7 @@ import (
 
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/textarea"
+	"github.com/charmbracelet/lipgloss"
 )
 
 type responseMsg struct {
@@ -40,8 +41,8 @@ func newTextarea() textarea.Model {
 	t.FocusedStyle.Placeholder = focusedPlaceholderStyle
 	t.BlurredStyle.Placeholder = placeholderStyle
 	t.FocusedStyle.CursorLine = cursorLineStyle
-	t.FocusedStyle.Base = focusedBorderStyle
-	t.BlurredStyle.Base = blurredBorderStyle
+	t.FocusedStyle.Base = lipgloss.NewStyle()
+	t.BlurredStyle.Base = lipgloss.NewStyle()
 	t.FocusedStyle.EndOfBuffer = endOfBufferStyle
 	t.BlurredStyle.EndOfBuffer = endOfBufferStyle
 	t.KeyMap.DeleteWordBackward.SetEnabled(false)

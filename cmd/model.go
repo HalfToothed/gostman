@@ -64,6 +64,7 @@ func NewModel() Model {
 	for range m.tabs {
 		ta := newTextarea()
 		ta.Cursor.Blink = false
+
 		m.tabContent = append(m.tabContent, ta)
 	}
 
@@ -84,7 +85,7 @@ func NewModel() Model {
 
 	m.spinner = spinner.New()
 	m.spinner.Spinner = spinner.Dot
-	m.spinner.Style = lipgloss.NewStyle().Foreground(lipgloss.Color("205"))
+	m.spinner.Style = lipgloss.NewStyle().Foreground(lipgloss.Color("#E03535"))
 	m.message = m.appBoundaryView("Ctrl+c to quit, alt+` to help")
 	m.loading = false
 
@@ -121,7 +122,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "shift+up":
 
 			m.loading = true
-			m.message = "Sending Request...."
+			m.message = m.appBoundaryMessage("Sending Request....")
 
 			m.spinner, cmd = m.spinner.Update(msg)
 			cmds = append(cmds, cmd)
@@ -142,7 +143,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+s":
 
 			m.loading = true
-			m.message = "Saving Request...."
+			m.message = m.appBoundaryMessage("Saving Request....")
 			m.spinner, cmd = m.spinner.Update(msg)
 			cmds = append(cmds, cmd)
 
@@ -155,10 +156,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				}
 			}
 
-		case "tab":
-			m.focused = (m.focused + 1) % len(m.fields)
 		case "shift+tab":
-			m.focused = (m.focused - 1 + len(m.fields)) % len(m.fields)
+			m.focused = (m.focused + 1) % len(m.fields)
+			m.message = m.appBoundaryView("Ctrl+c to quit, alt+` to help")
 
 		case "up":
 			m.responseViewport.LineUp(1) // Scroll up
@@ -179,15 +179,14 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.response = msg.response
 		m.status = msg.status
 		m.loading = false
-		m.message = "Request Sent!"
+		m.message = m.appBoundaryMessage("Request Sent!")
 
 		wrappedContent := wordwrap.String(m.response, m.responseViewport.Width)
 		m.responseViewport.SetContent(wrappedContent)
 		m.responseViewport.GotoTop()
-
 	case saveMsg:
 		m.loading = false
-		m.message = msg.message
+		m.message = m.appBoundaryMessage(msg.message)
 	}
 
 	// Update based on focus
@@ -216,7 +215,6 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m Model) View() string {
 
 	var footer string
-	focusedBorder := lipgloss.NewStyle().Border(lipgloss.RoundedBorder(), true).BorderForeground(lipgloss.Color("205"))
 
 	doc := strings.Builder{}
 	var renderedTabs []string
@@ -239,7 +237,6 @@ func (m Model) View() string {
 		} else if isLast && !isActive {
 			border.BottomRight = "┤"
 		}
-		style = style.Border(border)
 		renderedTabs = append(renderedTabs, style.Render(t))
 	}
 
@@ -248,15 +245,18 @@ func (m Model) View() string {
 	row := lipgloss.JoinHorizontal(lipgloss.Top, renderedTabs...)
 	doc.WriteString(row)
 	doc.WriteString("\n")
-	tabContent := windowStyle.Width(tabContentWidth).Height(m.height - 9).Render(m.tabContent[m.activeTab].View())
-	doc.WriteString(tabContent)
-	requestPanel := doc.String()
 
+	tabStyle := borderStyle
 	if m.focused == 3 {
 		m.tabContent[m.activeTab].Focus()
+		tabStyle = focusedBorder
 	} else {
 		m.tabContent[m.activeTab].Blur()
 	}
+	tabContent := tabStyle.Width(tabContentWidth - 2).Height(m.height - 9).Render(m.tabContent[m.activeTab].View())
+
+	doc.WriteString(tabContent)
+	requestPanel := doc.String()
 
 	m.responseViewport.Height = m.height - 7
 	m.responseViewport.Width = m.width - tabContentWidth - 2
@@ -264,7 +264,7 @@ func (m Model) View() string {
 	responsePanel := borderStyle.Width(m.width - tabContentWidth - 2).Height(m.height - 6).Render(titleStyle.Render(" Response: ") + headingStyle.Render(m.status) + "\n" + m.responseViewport.View())
 	mainPanel := lipgloss.JoinHorizontal(lipgloss.Left, requestPanel, responsePanel)
 
-	nameStyle := darkStyle
+	nameStyle := borderStyle
 	if m.focused == 0 {
 		m.nameField.Focus()
 		nameStyle = focusedBorder
@@ -300,9 +300,9 @@ func (m Model) View() string {
 
 	if m.loading {
 		spinnerView := m.spinner.View()
-		footer = spinnerView + m.message
+		footer = spinnerView + m.appBoundaryMessage(m.message)
 	} else {
-		footer = m.message
+		footer = m.appBoundaryMessage(m.message)
 	}
 
 	return m.styles.Base.Render(body + "\n" + footer)
@@ -310,7 +310,7 @@ func (m Model) View() string {
 
 func (m *Model) sizeInputs() {
 	for i := range m.tabContent {
-		m.tabContent[i].SetWidth(int(float64(m.width) * 0.5))
+		m.tabContent[i].SetWidth(int(float64(m.width)*0.5) - 2)
 		m.tabContent[i].SetHeight(m.height - 9)
 	}
 }
