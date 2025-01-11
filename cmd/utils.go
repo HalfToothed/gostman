@@ -3,6 +3,7 @@ package cmd
 import (
 	"encoding/json"
 
+	"github.com/TylerBrock/colorjson"
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/textarea"
 	"github.com/charmbracelet/lipgloss"
@@ -58,7 +59,10 @@ func formatJSON(input string) string {
 		return input
 	}
 
-	prettyJSON, err := json.MarshalIndent(rawData, "", "  ")
+	f := colorjson.NewFormatter()
+	f.Indent = 2
+
+	prettyJSON, err := f.Marshal(rawData)
 	if err != nil {
 		return input
 	}
