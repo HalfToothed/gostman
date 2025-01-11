@@ -2,6 +2,8 @@
 
 A terminal-based API client built with Bubble Tea for creating, sending, and managing HTTP requests in an interactive and user-friendly way.
 
+![gostman](https://github.com/user-attachments/assets/98ad0be6-479e-432f-8794-bd495a401872)
+
 ## ✨ Features
 
 - 📝 Create and send HTTP requests (GET, POST, PUT, DELETE, etc.).
