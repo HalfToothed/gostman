@@ -1,10 +1,10 @@
 package main
 
 import (
-	"gostman/cmd"
 	"log"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/halftoothed/gostman/cmd"
 )
 
 func main() {

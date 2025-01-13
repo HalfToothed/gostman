@@ -1,13 +1,16 @@
-module gostman
+module github.com/halftoothed/gostman
 
 go 1.23.1
 
-require github.com/charmbracelet/bubbletea v1.2.4
+require (
+	github.com/TylerBrock/colorjson v0.0.0-20200706003622-8a50f05110d2
+	github.com/charmbracelet/bubbletea v1.2.4
+)
 
 require (
-	github.com/TylerBrock/colorjson v0.0.0-20200706003622-8a50f05110d2 // indirect
 	github.com/atotto/clipboard v0.1.4 // indirect
 	github.com/fatih/color v1.18.0 // indirect
+	github.com/hokaccha/go-prettyjson v0.0.0-20211117102719-0474bc63780f // indirect
 	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/sahilm/fuzzy v0.1.1 // indirect
 )
@@ -15,7 +18,7 @@ require (
 require (
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/charmbracelet/bubbles v0.20.0
-	github.com/charmbracelet/lipgloss v1.0.0 // indirect
+	github.com/charmbracelet/lipgloss v1.0.0
 	github.com/charmbracelet/x/ansi v0.4.5 // indirect
 	github.com/charmbracelet/x/term v0.2.1 // indirect
 	github.com/erikgeiser/coninput v0.0.0-20211004153227-1c3628e74d0f // indirect
