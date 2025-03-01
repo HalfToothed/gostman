@@ -11,19 +11,18 @@ A terminal-based API client built with Bubble Tea for creating, sending, and man
 - Edit and delete saved requests easily.
 - Dynamic UI with support for status messages, and detailed responses.
 
-## 📥 Installation 
+## 📥 Install
 
-1. Ensure you have [Go](https://go.dev/) installed.
-2. Clone this repository:
+_If you have Go already, install the executable yourself_
+
+1. Run the following command:
    ```bash
-   git clone https://github.com/HalfToothed/gostman.git
-   cd gostman
+   go install github.com/halftoothed/gostman@latest
    ```
-
-3. Run the project:
+2. The tool is ready to use!
     ```bash
-    go run .
-    ```
+   gostman
+   ```
 
 ## 🧑‍💻 Usage 
 
