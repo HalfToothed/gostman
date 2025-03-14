@@ -221,30 +221,19 @@ func (m Model) View() string {
 
 	for i, t := range m.tabs {
 		var style lipgloss.Style
-		isFirst, isLast, isActive := i == 0, i == len(m.tabs)-1, i == m.activeTab
+		isActive := i == m.activeTab
 		if isActive {
 			style = activeTabStyle
 		} else {
 			style = inactiveTabStyle
 		}
-		border, _, _, _, _ := style.GetBorder()
-		if isFirst && isActive {
-			border.BottomLeft = "│"
-		} else if isFirst && !isActive {
-			border.BottomLeft = "├"
-		} else if isLast && isActive {
-			border.BottomRight = "│"
-		} else if isLast && !isActive {
-			border.BottomRight = "┤"
-		}
+
 		renderedTabs = append(renderedTabs, style.Render(t))
 	}
 
 	tabContentWidth := int(float64(m.width) * 0.5)
 
-	row := lipgloss.JoinHorizontal(lipgloss.Top, renderedTabs...)
-	doc.WriteString(row)
-	doc.WriteString("\n")
+	tabRow := lipgloss.JoinHorizontal(lipgloss.Top, renderedTabs...)
 
 	tabStyle := borderStyle
 	if m.focused == 3 {
@@ -253,9 +242,18 @@ func (m Model) View() string {
 	} else {
 		m.tabContent[m.activeTab].Blur()
 	}
-	tabContent := tabStyle.Width(tabContentWidth - 2).Height(m.height - 9).Render(m.tabContent[m.activeTab].View())
 
-	doc.WriteString(tabContent)
+	tabContent := lipgloss.NewStyle().
+		Width(tabContentWidth - 2).
+		Height(m.height - 9).
+		Render(m.tabContent[m.activeTab].View())
+
+	combined := lipgloss.JoinVertical(lipgloss.Left, tabRow, tabContent)
+
+	// Now, wrap the entire combined layout in a border.
+	finalPanel := tabStyle.Render(combined)
+
+	doc.WriteString(finalPanel)
 	requestPanel := doc.String()
 
 	m.responseViewport.Height = m.height - 7
@@ -311,6 +309,6 @@ func (m Model) View() string {
 func (m *Model) sizeInputs() {
 	for i := range m.tabContent {
 		m.tabContent[i].SetWidth(int(float64(m.width)*0.5) - 2)
-		m.tabContent[i].SetHeight(m.height - 9)
+		m.tabContent[i].SetHeight(m.height - 8)
 	}
 }
