@@ -24,7 +24,7 @@ type Styles struct {
 var (
 	borderStyle = lipgloss.NewStyle().
 			Padding(0, 0).
-			Border(lipgloss.RoundedBorder()).
+			Border(lipgloss.NormalBorder()).
 			BorderForeground(lipgloss.Color("62"))
 
 	focusedBorder = lipgloss.NewStyle().Border(lipgloss.RoundedBorder(), true).BorderForeground(lipgloss.Color("205"))

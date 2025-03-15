@@ -119,25 +119,28 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+left":
 			m.activeTab = max(m.activeTab-1, 0)
 			return m, nil
-		case "shift+up":
+		case "enter":
 
-			m.loading = true
-			m.message = m.appBoundaryMessage("Sending Request....")
+			if m.focused != 3 {
 
-			m.spinner, cmd = m.spinner.Update(msg)
-			cmds = append(cmds, cmd)
+				m.loading = true
+				m.message = m.appBoundaryMessage("Sending Request....")
 
-			// Perform the async operation in a goroutine
-			return m, func() tea.Msg {
-				response, status := send(m) // Simulate the send function
-				formattedResponse := formatJSON(response)
-				return responseMsg{
-					response: formattedResponse,
-					status:   status,
+				m.spinner, cmd = m.spinner.Update(msg)
+				cmds = append(cmds, cmd)
+
+				// Perform the async operation in a goroutine
+				return m, func() tea.Msg {
+					response, status := send(m) // Simulate the send function
+					formattedResponse := formatJSON(response)
+					return responseMsg{
+						response: formattedResponse,
+						status:   status,
+					}
 				}
 			}
 
-		case "shift+left":
+		case "ctrl+d":
 			dashboard := dashboard(m.width, m.height, m.styles, m, &m)
 			return dashboard, nil
 		case "ctrl+s":
@@ -156,18 +159,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				}
 			}
 
-		case "shift+tab":
+		case "tab":
 			m.focused = (m.focused + 1) % len(m.fields)
 			m.message = m.appBoundaryView("Ctrl+c to quit, alt+` to help")
-
-		case "up":
-			m.responseViewport.LineUp(1) // Scroll up
-		case "down":
-			m.responseViewport.LineDown(1) // Scroll down
-		case "pgup":
-			m.responseViewport.ViewUp() // Scroll up a full page
-		case "pgdown":
-			m.responseViewport.ViewDown() // Scroll down a full page
 		}
 	}
 
@@ -206,9 +200,24 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		cmds = append(cmds, cmd)
 	}
 
-	m.responseViewport, cmd = m.responseViewport.Update(msg)
-	cmds = append(cmds, cmd)
+	updateViewport := true
+	if keyMsg, ok := msg.(tea.KeyMsg); ok {
+		if keyMsg.String() == "up" || keyMsg.String() == "down" {
+			if m.focused == 3 {
+				updateViewport = false
+			}
+		}
+	}
+	if _, ok := msg.(tea.MouseMsg); ok {
+		if m.focused == 3 {
+			updateViewport = false
+		}
+	}
 
+	if updateViewport {
+		m.responseViewport, cmd = m.responseViewport.Update(msg)
+		cmds = append(cmds, cmd)
+	}
 	// Combine all commands into a single tea.Cmd
 	return m, tea.Batch(cmds...)
 }
