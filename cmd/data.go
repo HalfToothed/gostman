@@ -7,12 +7,12 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"runtime"
 
 	"github.com/google/uuid"
 )
 
-var appDataPath = os.Getenv("APPDATA")
-var appFolder = filepath.Join(appDataPath, "Gostman")
+var appFolder = getAppDataPath()
 var jsonfilePath = filepath.Join(appFolder, "gostman.json")
 
 // Request represents the structure of a single saved request
@@ -25,6 +25,14 @@ type Request struct {
 	Body        string `json:"body"`
 	QueryParams string `json:"queryParams"`
 	Response    string `json:"response"`
+}
+
+func getAppDataPath() string {
+	if runtime.GOOS == "windows" {
+		return filepath.Join(os.Getenv("APPDATA"), "Gostman")
+	}
+	// Linux and macOS path: ~/.local/share/Gostman
+	return filepath.Join(os.Getenv("HOME"), ".local", "share", "Gostman")
 }
 
 func SaveRequests(request Request) {

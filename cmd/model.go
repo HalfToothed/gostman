@@ -86,7 +86,7 @@ func NewModel() Model {
 	m.spinner = spinner.New()
 	m.spinner.Spinner = spinner.Dot
 	m.spinner.Style = lipgloss.NewStyle().Foreground(lipgloss.Color("#E03535"))
-	m.message = m.appBoundaryView("Ctrl+c to quit, alt+` to help")
+	m.message = m.appBoundaryView("Ctrl+c to quit, F2 for help")
 	m.loading = false
 
 	return m
@@ -109,7 +109,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch keypress := msg.String(); keypress {
 		case "ctrl+c":
 			return m, tea.Quit
-		case "alt+`":
+		case "f2":
 			cmd = tea.EnterAltScreen
 			help := newHelp(m.width, m.height, m.styles, m)
 			return help, nil
@@ -161,7 +161,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		case "tab":
 			m.focused = (m.focused + 1) % len(m.fields)
-			m.message = m.appBoundaryView("Ctrl+c to quit, alt+` to help")
+			m.message = m.appBoundaryView("Ctrl+c to quit, F2 for help")
 		}
 	}
 

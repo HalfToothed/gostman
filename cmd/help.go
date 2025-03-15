@@ -8,11 +8,11 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-const commandsContent = `shift + tab = Move Around
-shift + up (Arrow key) = Send Request
-ctrl + s = Save Request
+const commandsContent = `tab = Move Around
+enter = Send Request
+ctrl + s = Save Request								
 ctrl + Arrow Keys = Change Tabs (Body/Param/Header)
-shift + left (Arrow key) = Open dashboard
+ctrl + d = Open dashboard
 ctrl + c = Quit`
 
 func createCommandRows() []table.Row {
