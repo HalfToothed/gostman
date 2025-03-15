@@ -254,7 +254,7 @@ func (m Model) View() string {
 
 	tabContent := lipgloss.NewStyle().
 		Width(tabContentWidth - 2).
-		Height(m.height - 9).
+		Height(m.height - 8).
 		Render(m.tabContent[m.activeTab].View())
 
 	combined := lipgloss.JoinVertical(lipgloss.Left, tabRow, tabContent)

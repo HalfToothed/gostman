@@ -24,6 +24,7 @@ type board struct {
 	list        list.Model
 	returnModel tea.Model
 	model       *Model
+	showMsg     bool
 }
 
 func dashboard(width, height int, styles *Styles, returnModel tea.Model, model *Model) board {
@@ -47,9 +48,10 @@ func dashboard(width, height int, styles *Styles, returnModel tea.Model, model *
 		width:       width,
 		height:      height,
 		styles:      styles,
-		list:        list.New(items, list.NewDefaultDelegate(), width, height-2),
+		list:        list.New(items, list.NewDefaultDelegate(), width, height-3),
 		returnModel: returnModel,
 		model:       model,
+		showMsg:     false,
 	}
 
 	board.list.Title = "List of Requests "
@@ -84,32 +86,49 @@ func (m board) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m.model, nil
 		}
 		if msg.String() == "n" {
-			newModel := NewModel()
-			newModel.width = m.width
-			newModel.height = m.height
-			newModel.styles = m.styles
-			return newModel, nil
+			if !m.showMsg {
+				newModel := NewModel()
+				newModel.width = m.width
+				newModel.height = m.height
+				newModel.styles = m.styles
+				return newModel, nil
+			}
 		}
-		if msg.String() == "d" {
-			data := m.list.SelectedItem().(listItem)
-			err := delete(data.request.Id)
-			if err != nil {
-				return m.returnModel, nil
-			}
-
-			// Remove the item from the list
-			newItems := []list.Item{}
-			for i, item := range m.list.Items() {
-				if i != m.list.Index() {
-					newItems = append(newItems, item)
+		if msg.String() == "d" && !m.showMsg {
+			// Show message before deleting
+			m.showMsg = true
+			return m, nil
+		}
+		// Handle Yes/No input when the message is active
+		if m.showMsg {
+			if msg.String() == "y" {
+				data := m.list.SelectedItem().(listItem)
+				err := delete(data.request.Id)
+				if err != nil {
+					m.showMsg = false
+					return m.returnModel, nil
 				}
-			}
 
-			// Update the list with new items
-			m.list.SetItems(newItems)
+				// Remove the item from the list
+				newItems := []list.Item{}
+				for i, item := range m.list.Items() {
+					if i != m.list.Index() {
+						newItems = append(newItems, item)
+					}
+				}
+
+				// Update the list with new items
+				m.list.SetItems(newItems)
+				m.showMsg = false
+				return m, nil
+			}
+			if msg.String() == "n" {
+				m.showMsg = false // Cancel delete
+				return m, nil
+			}
 		}
 	case tea.WindowSizeMsg:
-		m.list.SetSize(msg.Width, msg.Height-2)
+		m.list.SetSize(msg.Width, msg.Height-3)
 	}
 
 	var cmd tea.Cmd
@@ -118,7 +137,11 @@ func (m board) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m board) View() string {
+	footer := m.model.appBoundaryMessage(m.model.message)
+	if m.showMsg {
+		footer = m.model.appBoundaryMessage("Delete selected item? : (Y/N)")
+	}
 
-	body := borderStyle.Width(m.width - 4).Render(m.list.View())
-	return m.styles.Base.Render(body)
+	body := borderStyle.Width(m.width - 2).Render(m.list.View())
+	return m.styles.Base.Render(body + "\n" + footer)
 }
