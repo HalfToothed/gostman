@@ -100,3 +100,7 @@ func (m Model) appBoundaryView(text string) string {
 func (m Model) appBoundaryMessage(text string) string {
 	return lipgloss.PlaceHorizontal(m.width, lipgloss.Left, m.styles.ErrorHeaderText.Render(text))
 }
+
+func (m board) appBoundaryMessage(text string) string {
+	return lipgloss.PlaceHorizontal(m.width, lipgloss.Left, m.styles.ErrorHeaderText.Render(text))
+}

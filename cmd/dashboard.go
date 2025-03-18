@@ -23,11 +23,10 @@ type board struct {
 	styles      *Styles
 	list        list.Model
 	returnModel tea.Model
-	model       *Model
 	showMsg     bool
 }
 
-func dashboard(width, height int, styles *Styles, returnModel tea.Model, model *Model) board {
+func dashboard(width, height int, styles *Styles, returnModel tea.Model) board {
 	var savedRequests []Request
 
 	if !checkFileExists(jsonfilePath) {
@@ -50,7 +49,6 @@ func dashboard(width, height int, styles *Styles, returnModel tea.Model, model *
 		styles:      styles,
 		list:        list.New(items, list.NewDefaultDelegate(), width, height-3),
 		returnModel: returnModel,
-		model:       model,
 		showMsg:     false,
 	}
 
@@ -82,8 +80,12 @@ func (m board) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		if msg.String() == "enter" {
 			data := m.list.SelectedItem().(listItem)
-			load(data.request, m.model)
-			return m.model, nil
+			newModel := NewModel()
+			load(data.request, &newModel)
+			newModel.width = m.width
+			newModel.height = m.height
+			newModel.styles = m.styles
+			return newModel, nil
 		}
 		if msg.String() == "n" {
 			if !m.showMsg {
@@ -129,6 +131,8 @@ func (m board) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	case tea.WindowSizeMsg:
 		m.list.SetSize(msg.Width, msg.Height-3)
+		m.height = msg.Height
+		m.width = msg.Width
 	}
 
 	var cmd tea.Cmd
@@ -137,9 +141,9 @@ func (m board) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m board) View() string {
-	footer := m.model.appBoundaryMessage(m.model.message)
+	footer := m.appBoundaryMessage("Ctrl+c to quit, F2 for help")
 	if m.showMsg {
-		footer = m.model.appBoundaryMessage("Delete selected item? : (Y/N)")
+		footer = m.appBoundaryMessage("Delete selected item? : (Y/N)")
 	}
 
 	body := borderStyle.Width(m.width - 2).Render(m.list.View())

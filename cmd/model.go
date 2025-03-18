@@ -141,7 +141,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 
 		case "ctrl+d":
-			dashboard := dashboard(m.width, m.height, m.styles, m, &m)
+			dashboard := dashboard(m.width, m.height, m.styles, m)
 			return dashboard, nil
 		case "ctrl+s":
 
