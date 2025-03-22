@@ -70,6 +70,10 @@ func formatJSON(input string) string {
 	return string(prettyJSON)
 }
 
+func initializeVariables() string {
+	return ""
+}
+
 func createHeaders() string {
 
 	var rawData interface{}
