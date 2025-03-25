@@ -23,9 +23,14 @@ func environment(board Model) env {
 		content:     newTextarea(),
 	}
 
-	env.content.SetValue(createHeaders())
+	env.content.SetValue(loadVariables())
 	env.content.SetWidth(env.width - 2)
 	env.content.SetHeight(env.height - 5)
+	env.content.Focus()
+	env.content.Placeholder = `
+	{
+		"Key":"Value",
+	}`
 
 	return env
 
@@ -41,6 +46,9 @@ func (en env) Init() tea.Cmd {
 }
 
 func (en env) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+
+	var cmd tea.Cmd
+	var cmds []tea.Cmd
 
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
@@ -58,8 +66,10 @@ func (en env) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	en.sizeInputs()
 
-	var cmd tea.Cmd
-	return en, cmd
+	en.content, cmd = en.content.Update(msg)
+	cmds = append(cmds, cmd)
+
+	return en, tea.Batch(cmds...)
 }
 
 func (en env) View() string {

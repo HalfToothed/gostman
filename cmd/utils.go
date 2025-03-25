@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"encoding/json"
+	"os"
 
 	"github.com/TylerBrock/colorjson"
 	"github.com/charmbracelet/bubbles/key"
@@ -70,8 +71,20 @@ func formatJSON(input string) string {
 	return string(prettyJSON)
 }
 
-func initializeVariables() string {
-	return ""
+func loadVariables() string {
+	var saved_data SavedData
+
+	if !checkFileExists(jsonfilePath) {
+		file, err := os.ReadFile(jsonfilePath)
+		if err != nil {
+			panic(err)
+		}
+		json.Unmarshal(file, &saved_data)
+	}
+
+	varibles := formatJSON(saved_data.Variables)
+
+	return varibles
 }
 
 func createHeaders() string {

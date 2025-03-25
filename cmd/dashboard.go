@@ -27,15 +27,17 @@ type board struct {
 }
 
 func dashboard(width, height int, styles *Styles, returnModel tea.Model) board {
-	var savedRequests []Request
+	var saved_data SavedData
 
 	if !checkFileExists(jsonfilePath) {
 		file, err := os.ReadFile(jsonfilePath)
 		if err != nil {
 			panic(err)
 		}
-		json.Unmarshal(file, &savedRequests)
+		json.Unmarshal(file, &saved_data)
 	}
+
+	savedRequests := saved_data.Requests
 
 	// Convert requests to list items
 	var items []list.Item

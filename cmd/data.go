@@ -12,8 +12,10 @@ import (
 	"github.com/google/uuid"
 )
 
-var appFolder = getAppDataPath()
-var jsonfilePath = filepath.Join(appFolder, "gostman.json")
+type SavedData struct {
+	Variables string    `json:"variables"`
+	Requests  []Request `json:"requests"`
+}
 
 // Request represents the structure of a single saved request
 type Request struct {
@@ -26,6 +28,9 @@ type Request struct {
 	QueryParams string `json:"queryParams"`
 	Response    string `json:"response"`
 }
+
+var appFolder = getAppDataPath()
+var jsonfilePath = filepath.Join(appFolder, "gostman.json")
 
 func getAppDataPath() string {
 	if runtime.GOOS == "windows" {
@@ -59,8 +64,10 @@ func SaveRequests(request Request) {
 		panic(err)
 	}
 
-	var savedRequests []Request
-	json.Unmarshal(file, &savedRequests)
+	var saved_data SavedData
+	json.Unmarshal(file, &saved_data)
+
+	savedRequests := saved_data.Requests
 
 	if request.Id == "" {
 
@@ -77,7 +84,9 @@ func SaveRequests(request Request) {
 		}
 	}
 
-	updatedData, err := json.MarshalIndent(savedRequests, "", " ")
+	saved_data.Requests = savedRequests
+
+	updatedData, err := json.MarshalIndent(saved_data, "", " ")
 
 	if err != nil {
 		log.Fatalf("Error encoding JSON data: %v", err)
@@ -126,12 +135,14 @@ func delete(id string) error {
 	}
 
 	// Parse the JSON into a slice
-	var requests []Request
+	var saved_data SavedData
 	if len(file) > 0 {
-		if err := json.Unmarshal(file, &requests); err != nil {
+		if err := json.Unmarshal(file, &saved_data); err != nil {
 			return fmt.Errorf("failed to parse JSON: %w", err)
 		}
 	}
+
+	requests := saved_data.Requests
 
 	// Find the item to delete
 	index := -1
@@ -147,10 +158,10 @@ func delete(id string) error {
 	}
 
 	// Delete the item from the slice
-	requests = append(requests[:index], requests[index+1:]...)
+	saved_data.Requests = append(requests[:index], requests[index+1:]...)
 
 	// Write the updated slice back to the file
-	updatedData, err := json.MarshalIndent(requests, "", "  ")
+	updatedData, err := json.MarshalIndent(saved_data, "", "  ")
 	if err != nil {
 		return fmt.Errorf("failed to encode JSON: %w", err)
 	}
