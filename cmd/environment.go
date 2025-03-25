@@ -5,6 +5,8 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
+var footer string
+
 type env struct {
 	width       int
 	height      int
@@ -32,6 +34,8 @@ func environment(board Model) env {
 		"Key":"Value",
 	}`
 
+	footer = env.appBoundaryView("Ctrl+c to quit, <ESC> to go back")
+
 	return env
 
 }
@@ -58,6 +62,12 @@ func (en env) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if msg.String() == "esc" {
 			return en.returnModel, nil
 		}
+		if msg.String() == "ctrl+s" {
+			SaveVariables(en.content.Value())
+			footer = en.appBoundaryMessage("Environment Variables Saved..... ")
+		} else {
+			footer = en.appBoundaryView("Ctrl+c to quit, <ESC> to go back")
+		}
 
 	case tea.WindowSizeMsg:
 		en.width = msg.Width
@@ -73,8 +83,9 @@ func (en env) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (en env) View() string {
-	footer := en.appBoundaryMessage("Ctrl+c to quit, F2 for help")
+
+	header := en.appBoundaryView("Environment Varibales")
 
 	body := borderStyle.Width(en.width - 2).Height(en.height - 4).Render(en.content.View())
-	return en.styles.Base.Render(body + "\n" + footer)
+	return en.styles.Base.Render(header + "\n" + body + "\n" + footer)
 }

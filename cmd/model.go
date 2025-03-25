@@ -119,7 +119,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+left":
 			m.activeTab = max(m.activeTab-1, 0)
 			return m, nil
-		case "f4":
+		case "ctrl+t":
 			environment := environment(m)
 			return environment, nil
 		case "enter":

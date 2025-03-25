@@ -82,9 +82,7 @@ func loadVariables() string {
 		json.Unmarshal(file, &saved_data)
 	}
 
-	varibles := formatJSON(saved_data.Variables)
-
-	return varibles
+	return saved_data.Variables
 }
 
 func createHeaders() string {

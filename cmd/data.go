@@ -173,6 +173,46 @@ func delete(id string) error {
 	return nil
 }
 
+func SaveVariables(variableString string) {
+
+	if checkFileExists(jsonfilePath) {
+
+		if err := os.MkdirAll(appFolder, os.ModePerm); err != nil {
+			fmt.Println("Failed to create directory:", err)
+			return
+		}
+
+		myfile, err := os.Create(jsonfilePath)
+		if err != nil {
+			fmt.Println("Failed to create file:", err)
+			return
+		}
+
+		defer myfile.Close()
+	}
+
+	file, err := os.ReadFile(jsonfilePath)
+
+	if err != nil {
+		panic(err)
+	}
+
+	var saved_data SavedData
+	json.Unmarshal(file, &saved_data)
+
+	saved_data.Variables = variableString
+
+	updatedData, err := json.MarshalIndent(saved_data, "", " ")
+
+	if err != nil {
+		log.Fatalf("Error encoding JSON data: %v", err)
+	}
+
+	if err := os.WriteFile(jsonfilePath, updatedData, 0644); err != nil {
+		fmt.Println("failed to add the request")
+	}
+}
+
 func checkFileExists(filepath string) bool {
 	_, err := os.Stat(filepath)
 	return errors.Is(err, os.ErrNotExist)
