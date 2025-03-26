@@ -29,10 +29,11 @@ _If you have Go already, install the executable yourself_
 ### Use keyboard shortcuts to interact with the UI:
 
 - Ctrl+C: Quit the application.
-- Shift+Tab: Move Around
-- Shift+Up: Send a request.
+- Tab: Move Around
+- Enter: Send a request.
 - Ctrl+S: Save the current request.
-- Shift+Left: Load a saved request.
+- Ctrl+D: Open Dashboard.
+- F2: Open help page
 
 ### Saving and Loading Requests 
 
