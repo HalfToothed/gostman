@@ -143,7 +143,7 @@ func (m board) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m board) View() string {
-	footer := m.appBoundaryMessage("Ctrl+c to quit, F2 for help")
+	footer := m.appBoundaryMessage("Ctrl+c to quit, <ESC> to go back")
 	if m.showMsg {
 		footer = m.appBoundaryMessage("Delete selected item? : (Y/N)")
 	}

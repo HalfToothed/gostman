@@ -11,7 +11,8 @@ import (
 const commandsContent = `tab = Move Around
 enter = Send Request
 ctrl + s = Save Request								
-ctrl + Arrow Keys = Change Tabs (Body/Param/Header)
+shift + Arrow Keys = Change Tabs (Body/Param/Header)
+ctrl + e = Open Environment Variables page
 ctrl + d = Open dashboard
 ctrl + c = Quit`
 
