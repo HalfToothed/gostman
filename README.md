@@ -28,13 +28,14 @@ _If you have Go already, install the executable yourself_
 
 ### Use keyboard shortcuts to interact with the UI:
 
-- Ctrl+C: Quit the application.
+- Ctrl + C: Quit the application.
 - Tab: Move Around
 - Ctrl + Arrow Keys: Change Tabs (Body/Param/Header)
 - Enter: Send a request.
-- Ctrl+S: Save the current request.
-- Ctrl+D: Open Dashboard.
-- F2: Open help page
+- Ctrl + S: Save the current request.
+- Ctrl + E: Open Environment Variables page
+- Ctrl + D: Open Dashboard.
+- Ctrl + H: Open Help page
 
 ### Saving and Loading Requests 
 
