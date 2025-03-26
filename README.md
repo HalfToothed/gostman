@@ -30,6 +30,7 @@ _If you have Go already, install the executable yourself_
 
 - Ctrl+C: Quit the application.
 - Tab: Move Around
+- Ctrl + Arrow Keys: Change Tabs (Body/Param/Header)
 - Enter: Send a request.
 - Ctrl+S: Save the current request.
 - Ctrl+D: Open Dashboard.
