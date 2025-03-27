@@ -28,13 +28,12 @@ func environment(board Model) env {
 	env.content.SetValue(loadVariables())
 	env.content.SetWidth(env.width - 2)
 	env.content.SetHeight(env.height - 5)
-	env.content.Focus()
 	env.content.Placeholder = `
 	{
-		"Key":"Value",
-	}`
+	"Key":"Value",
+}`
 
-	footer = env.appBoundaryView("Ctrl+c to quit, <ESC> to go back")
+	footer = env.appBoundaryView("Ctrl+s to save variables, <ESC> to go back")
 
 	return env
 
@@ -54,6 +53,8 @@ func (en env) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 	var cmds []tea.Cmd
 
+	en.content.Focus()
+
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		if msg.String() == "ctrl+c" {
@@ -63,10 +64,10 @@ func (en env) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return en.returnModel, nil
 		}
 		if msg.String() == "ctrl+s" {
-			SaveVariables(en.content.Value())
-			footer = en.appBoundaryMessage("Environment Variables Saved..... ")
+			message := SaveVariables(en.content.Value())
+			footer = en.appBoundaryMessage(message)
 		} else {
-			footer = en.appBoundaryView("Ctrl+c to quit, <ESC> to go back")
+			footer = en.appBoundaryView("Ctrl+s to Save, <ESC> to go back")
 		}
 
 	case tea.WindowSizeMsg:

@@ -3,6 +3,8 @@ package cmd
 import (
 	"encoding/json"
 	"os"
+	"regexp"
+	"strings"
 
 	"github.com/TylerBrock/colorjson"
 	"github.com/charmbracelet/bubbles/key"
@@ -108,6 +110,17 @@ func createHeaders() string {
 	}
 
 	return string(prettyJSON)
+}
+
+func replacePlaceholders(url string, variables map[string]string) string {
+	re := regexp.MustCompile(`{{(.*?)}}`)
+	return re.ReplaceAllStringFunc(url, func(match string) string {
+		key := strings.Trim(match, "{}") // Extract key name
+		if value, exists := variables[key]; exists {
+			return value
+		}
+		return match // Keep original placeholder if key not found
+	})
 }
 
 type keymap struct {

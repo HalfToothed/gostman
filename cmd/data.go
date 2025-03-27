@@ -173,19 +173,17 @@ func delete(id string) error {
 	return nil
 }
 
-func SaveVariables(variableString string) {
+func SaveVariables(variableString string) string {
 
 	if checkFileExists(jsonfilePath) {
 
 		if err := os.MkdirAll(appFolder, os.ModePerm); err != nil {
 			fmt.Println("Failed to create directory:", err)
-			return
 		}
 
 		myfile, err := os.Create(jsonfilePath)
 		if err != nil {
 			fmt.Println("Failed to create file:", err)
-			return
 		}
 
 		defer myfile.Close()
@@ -200,6 +198,12 @@ func SaveVariables(variableString string) {
 	var saved_data SavedData
 	json.Unmarshal(file, &saved_data)
 
+	var variables map[string]string
+	er := json.Unmarshal([]byte(variableString), &variables)
+	if er != nil {
+		return "Error parsing Environment Variables, JSON structure is incorrect"
+	}
+
 	saved_data.Variables = variableString
 
 	updatedData, err := json.MarshalIndent(saved_data, "", " ")
@@ -211,6 +215,9 @@ func SaveVariables(variableString string) {
 	if err := os.WriteFile(jsonfilePath, updatedData, 0644); err != nil {
 		fmt.Println("failed to add the request")
 	}
+
+	return "Environment Variables Saved Sucessfully"
+
 }
 
 func checkFileExists(filepath string) bool {

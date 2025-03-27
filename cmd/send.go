@@ -10,11 +10,22 @@ import (
 )
 
 func send(m Model) (string, string) {
-
+	variablesJSON := loadVariables()
 	method := strings.ToUpper(strings.TrimSpace(m.methodField.Value()))
 	URL := strings.TrimSpace(m.urlField.Value())
 	headersJSON := strings.TrimSpace(m.tabContent[2].Value())
 	paramsJSON := strings.TrimSpace(m.tabContent[1].Value())
+
+	// Parse variables into a map
+	var variables map[string]string
+	er := json.Unmarshal([]byte(variablesJSON), &variables)
+	if er != nil {
+		return "\n Error parsing Env Variables", "Incorrect Env Variables"
+	}
+
+	URL = replacePlaceholders(URL, variables)
+	headersJSON = replacePlaceholders(headersJSON, variables)
+	paramsJSON = replacePlaceholders(paramsJSON, variables)
 
 	// Parse JSON into a map
 	var headers map[string]string
@@ -69,8 +80,8 @@ func send(m Model) (string, string) {
 		return string(body), resp.Status
 
 	case "POST":
-
-		payload := []byte(m.tabContent[0].Value())
+		content := replacePlaceholders(m.tabContent[0].Value(), variables)
+		payload := []byte(content)
 
 		client := &http.Client{}
 		req, err := http.NewRequest("POST", URL, bytes.NewBuffer(payload))
@@ -96,7 +107,8 @@ func send(m Model) (string, string) {
 		return string(body), resp.Status
 
 	case "PUT":
-		payload := []byte(m.tabContent[0].Value())
+		content := replacePlaceholders(m.tabContent[0].Value(), variables)
+		payload := []byte(content)
 
 		client := &http.Client{}
 		req, err := http.NewRequest("PUT", URL, bytes.NewBuffer(payload))
@@ -164,7 +176,8 @@ func send(m Model) (string, string) {
 		return string(body), resp.Status
 
 	case "PATCH":
-		payload := []byte(m.tabContent[0].Value())
+		content := replacePlaceholders(m.tabContent[0].Value(), variables)
+		payload := []byte(content)
 
 		client := &http.Client{}
 		req, err := http.NewRequest("PATCH", URL, bytes.NewBuffer(payload))
