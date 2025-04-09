@@ -18,9 +18,13 @@ func send(m Model) (string, string) {
 
 	// Parse variables into a map
 	var variables map[string]string
-	er := json.Unmarshal([]byte(variablesJSON), &variables)
-	if er != nil {
-		return "\n Error parsing Env Variables", "Incorrect Env Variables"
+	if variablesJSON == "" { // "" is not valid string to unmarshal. occurs when user doesn't init any env vars.
+		variables = make(map[string]string)
+	} else {
+		er := json.Unmarshal([]byte(variablesJSON), &variables)
+		if er != nil {
+			return "\n Error parsing Env Variables", "Incorrect Env Variables"
+		}
 	}
 
 	URL = replacePlaceholders(URL, variables)
