@@ -22,11 +22,11 @@ type board struct {
 	height      int
 	styles      *Styles
 	list        list.Model
-	returnModel tea.Model
+	returnModel *Model
 	showMsg     bool
 }
 
-func dashboard(width, height int, styles *Styles, returnModel tea.Model) board {
+func dashboard(width, height int, styles *Styles, returnModel *Model) board {
 	var saved_data SavedData
 
 	if !checkFileExists(jsonfilePath) {
@@ -78,6 +78,8 @@ func (m board) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 		}
 		if msg.String() == "esc" {
+			m.returnModel.height = m.height
+			m.returnModel.width = m.width
 			return m.returnModel, nil
 		}
 		if msg.String() == "enter" {

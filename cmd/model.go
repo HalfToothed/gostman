@@ -111,7 +111,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 		case "ctrl+h":
 			cmd = tea.EnterAltScreen
-			help := newHelp(m.width, m.height, m.styles, m)
+			help := newHelp(m.width, m.height, m.styles, &m)
 			return help, nil
 		case "shift+right":
 			m.activeTab = min(m.activeTab+1, len(m.tabs)-1)
@@ -144,7 +144,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 
 		case "ctrl+d":
-			dashboard := dashboard(m.width, m.height, m.styles, m)
+			dashboard := dashboard(m.width, m.height, m.styles, &m)
 			return dashboard, nil
 		case "ctrl+s":
 

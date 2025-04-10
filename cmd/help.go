@@ -30,11 +30,11 @@ type help struct {
 	width         int
 	height        int
 	styles        *Styles
-	returnModel   tea.Model
+	returnModel   *Model
 	commandsTable table.Model
 }
 
-func newHelp(width, height int, styles *Styles, returnModel tea.Model) help {
+func newHelp(width, height int, styles *Styles, returnModel *Model) help {
 
 	columns := []table.Column{
 		{Title: "Command", Width: (width / 2) - 13},
@@ -87,6 +87,8 @@ func (m help) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "esc":
+			m.returnModel.height = m.height
+			m.returnModel.width = m.width
 			return m.returnModel, nil
 		case "ctrl+c":
 			return m, tea.Quit

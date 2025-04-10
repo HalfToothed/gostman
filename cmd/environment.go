@@ -11,7 +11,7 @@ type env struct {
 	width       int
 	height      int
 	styles      *Styles
-	returnModel tea.Model
+	returnModel Model
 	content     textarea.Model
 }
 
@@ -61,6 +61,8 @@ func (en env) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return en, tea.Quit
 		}
 		if msg.String() == "esc" {
+			en.returnModel.height = en.height
+			en.returnModel.width = en.width
 			return en.returnModel, nil
 		}
 		if msg.String() == "ctrl+s" {
