@@ -1,0 +1,49 @@
+---
+title: Gostman | terminal-based API client.
+description: "gostman is a command-line API client designed to streamline the way you create, test, and manage HTTP requests."
+template: splash
+hero:
+  title: Fast Terminal-Based API client
+  tagline: "gostman is a command-line API client designed to streamline the way you create, test, and manage HTTP requests."
+  image:
+    file: ../../assets/gopher.png
+  actions:
+    - text: View on Github
+      link: https://github.com/HalfToothed/gostman
+      icon: right-arrow
+      variant: primary
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+import GithubStar from '../../components/GithubStar.astro';
+import About from '../../components/about.astro';
+
+<GithubStar />
+
+## Features
+
+<CardGrid stagger>
+  <Card title="Elegant Terminal UI" icon="star">
+    Gostman features a sleek and intuitive text-based interface designed for efficiency and clarity.
+  </Card>
+  <Card title="Powerful API Client" icon="rocket">
+    Fast, lightweight, and responsive—Gostman is optimized for productivity right inside your terminal.
+  </Card>
+  <Card title="Request Management" icon="open-book">
+    Save, load, and organize your API requests with ease—ideal for repeat testing and quick access.
+  </Card>
+  <Card title="Supports RESTful Methods" icon="rocket">
+    Easily send GET, POST, PUT, DELETE and other HTTP methods with structured inputs.
+  </Card>
+  <Card title="Download Gostman" icon="cloud-download">
+    Grab the latest binary for your system from 
+    [GitHub Releases](https://github.com/halftoothed/gostman/releases).
+  </Card>
+  <Card title="Contribute" icon="pen">
+    [Join us](https://github.com/halftoothed/gostman) in making Gostman better—bug fixes, features, tests, or docs!
+  </Card>
+</CardGrid>
+
+<About title="Built with ❤️ by Abhishek Patil">
+
+</About>
