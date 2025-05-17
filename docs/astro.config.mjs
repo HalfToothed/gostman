@@ -2,7 +2,7 @@
 import { defineConfig } from "astro/config";
 import starlight from "@astrojs/starlight";
 
-const site = "http://localhost:4321/gostman";
+const site = "https://halftoothed.github.io/gostman";
 
 // https://astro.build/config
 export default defineConfig({
