@@ -8,7 +8,7 @@ const site = "https://halftoothed.github.io/gostman";
 export default defineConfig({
   site: "https://halftoothed.github.io",
   base: "/gostman",
-  outDir: '../docs/dist',
+  outDir: './docs/dist',
   integrations: [
     starlight({
       title: "Gostman",
