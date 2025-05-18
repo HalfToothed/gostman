@@ -7,6 +7,7 @@ const site = "https://halftoothed.github.io/gostman";
 // https://astro.build/config
 export default defineConfig({
   site: "https://halftoothed.github.io",
+  outDir: '../docs/dist',
   base: "/gostman",
   integrations: [
     starlight({
