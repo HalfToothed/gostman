@@ -21,6 +21,9 @@ jobs:
         uses: withastro/action@v3
         with:
           path: docs  # Important: your Astro project lives in the "docs" folder
+          node-version: 20        
+          package-manager: pnpm@9
+
 
   deploy:
     needs: build
