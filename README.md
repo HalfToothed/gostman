@@ -2,7 +2,7 @@
 
 A terminal-based API client built with Bubble Tea for creating, sending, and managing HTTP requests in an interactive and user-friendly way.
 
-![gostman](https://github.com/user-attachments/assets/98ad0be6-479e-432f-8794-bd495a401872)
+![gostman](https://github.com/user-attachments/assets/65c46e9d-2600-47c9-809f-779b5531f023)
 
 ## ✨ Features
 
