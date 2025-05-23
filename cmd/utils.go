@@ -15,6 +15,7 @@ import (
 type responseMsg struct {
 	response string
 	status   string
+	console  string
 }
 
 type saveMsg struct {
