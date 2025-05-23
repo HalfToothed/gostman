@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	p := tea.NewProgram(cmd.NewModel(),
+	p := tea.NewProgram(cmd.NewStartupModel(),
 		tea.WithAltScreen(),
 		tea.WithMouseCellMotion(),
 	)
