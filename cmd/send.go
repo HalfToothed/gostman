@@ -2,11 +2,15 @@ package cmd
 
 import (
 	"bytes"
+	"compress/flate"
+	"compress/gzip"
 	"encoding/json"
 	"io"
 	"net/http"
 	"net/url"
 	"strings"
+
+	"github.com/andybalholm/brotli"
 )
 
 func send(m Model) (string, string) {
@@ -15,6 +19,7 @@ func send(m Model) (string, string) {
 	URL := strings.TrimSpace(m.urlField.Value())
 	headersJSON := strings.TrimSpace(m.tabContent[2].Value())
 	paramsJSON := strings.TrimSpace(m.tabContent[1].Value())
+
 
 	// Parse variables into a map
 	var variables map[string]string
@@ -27,12 +32,15 @@ func send(m Model) (string, string) {
 	headersJSON = replacePlaceholders(headersJSON, variables)
 	paramsJSON = replacePlaceholders(paramsJSON, variables)
 
+
 	// Parse JSON into a map
 	var headers map[string]string
 	err := json.Unmarshal([]byte(headersJSON), &headers)
 	if err != nil {
 		return " \n Error parsing Headers \n\n Correct the Headers format", " Incorrect Headers "
 	}
+
+
 
 	if paramsJSON != "" {
 		var params map[string]string
@@ -59,20 +67,41 @@ func send(m Model) (string, string) {
 
 	switch method {
 	case "GET":
-		// Make the GET request
-		resp, err := http.Get(URL)
+		client := &http.Client{}
+		req, err := http.NewRequest("GET", URL, nil)
 		if err != nil {
 			return "Failed to make request\n\n" + err.Error(), ""
 		}
 
 		// Set headers
 		for key, value := range headers {
-			resp.Header.Set(key, value)
+			req.Header.Set(key, value)
 		}
 
+		resp, err := client.Do(req)
+		if err != nil {
+			return "Failed to make request\n\n" + err.Error(), ""
+		}
 		defer resp.Body.Close()
 
-		body, err := io.ReadAll(resp.Body)
+		var reader io.ReadCloser
+		switch resp.Header.Get("Content-Encoding") {
+		case "gzip":
+			reader, err = gzip.NewReader(resp.Body)
+			if err != nil {
+				return "Failed to decompress gzip response\n\n" + err.Error(), ""
+			}
+			defer reader.Close()
+		case "deflate":
+			reader = flate.NewReader(resp.Body)
+			defer reader.Close()
+		case "br":
+			reader = io.NopCloser(brotli.NewReader(resp.Body))
+		default:
+			reader = resp.Body
+		}
+
+		body, err := io.ReadAll(reader)
 		if err != nil {
 			return "Failed to read response body\n\n" + err.Error(), ""
 		}
@@ -100,7 +129,24 @@ func send(m Model) (string, string) {
 		}
 		defer resp.Body.Close()
 
-		body, err := io.ReadAll(resp.Body)
+		var reader io.ReadCloser
+		switch resp.Header.Get("Content-Encoding") {
+		case "gzip":
+			reader, err = gzip.NewReader(resp.Body)
+			if err != nil {
+				return "Failed to decompress gzip response\n\n" + err.Error(), ""
+			}
+			defer reader.Close()
+		case "deflate":
+			reader = flate.NewReader(resp.Body)
+			defer reader.Close()
+		case "br":
+			reader = io.NopCloser(brotli.NewReader(resp.Body))
+		default:
+			reader = resp.Body
+		}
+
+		body, err := io.ReadAll(reader)
 		if err != nil {
 			return "Failed to read response body\n\n" + err.Error(), ""
 		}
@@ -127,7 +173,24 @@ func send(m Model) (string, string) {
 		}
 		defer resp.Body.Close()
 
-		body, err := io.ReadAll(resp.Body)
+		var reader io.ReadCloser
+		switch resp.Header.Get("Content-Encoding") {
+		case "gzip":
+			reader, err = gzip.NewReader(resp.Body)
+			if err != nil {
+				return "Failed to decompress gzip response\n\n" + err.Error(), ""
+			}
+			defer reader.Close()
+		case "deflate":
+			reader = flate.NewReader(resp.Body)
+			defer reader.Close()
+		case "br":
+			reader = io.NopCloser(brotli.NewReader(resp.Body))
+		default:
+			reader = resp.Body
+		}
+
+		body, err := io.ReadAll(reader)
 		if err != nil {
 			return "Failed to read response body\n\n" + err.Error(), ""
 		}
@@ -140,34 +203,57 @@ func send(m Model) (string, string) {
 			return "Failed to make request\n\n" + err.Error(), ""
 		}
 
+		// Set headers
+		for key, value := range headers {
+			req.Header.Set(key, value)
+		}
+
 		resp, err := client.Do(req)
 		if err != nil {
 			return "Failed to make request\n\n" + err.Error(), ""
 		}
 		defer resp.Body.Close()
 
-		// Set headers
-		for key, value := range headers {
-			resp.Header.Set(key, value)
+		var reader io.ReadCloser
+		switch resp.Header.Get("Content-Encoding") {
+		case "gzip":
+			reader, err = gzip.NewReader(resp.Body)
+			if err != nil {
+				return "Failed to decompress gzip response\n\n" + err.Error(), ""
+			}
+			defer reader.Close()
+		case "deflate":
+			reader = flate.NewReader(resp.Body)
+			defer reader.Close()
+		case "br":
+			reader = io.NopCloser(brotli.NewReader(resp.Body))
+		default:
+			reader = resp.Body
 		}
 
-		body, err := io.ReadAll(resp.Body)
+		body, err := io.ReadAll(reader)
 		if err != nil {
 			return "Failed to read response body\n\n" + err.Error(), ""
 		}
 		return string(body), resp.Status
 
 	case "HEAD":
-		resp, err := http.Head(URL)
+		client := &http.Client{}
+		req, err := http.NewRequest("HEAD", URL, nil)
+		if err != nil {
+			return "Failed to make request\n\n" + err.Error(), ""
+		}
+
+		// Set headers
+		for key, value := range headers {
+			req.Header.Set(key, value)
+		}
+
+		resp, err := client.Do(req)
 		if err != nil {
 			return "Failed to make request\n\n" + err.Error(), ""
 		}
 		defer resp.Body.Close()
-
-		// Set headers
-		for key, value := range headers {
-			resp.Header.Set(key, value)
-		}
 
 		body, err := io.ReadAll(resp.Body)
 		if err != nil {
@@ -196,7 +282,24 @@ func send(m Model) (string, string) {
 		}
 		defer resp.Body.Close()
 
-		body, err := io.ReadAll(resp.Body)
+		var reader io.ReadCloser
+		switch resp.Header.Get("Content-Encoding") {
+		case "gzip":
+			reader, err = gzip.NewReader(resp.Body)
+			if err != nil {
+				return "Failed to decompress gzip response\n\n" + err.Error(), ""
+			}
+			defer reader.Close()
+		case "deflate":
+			reader = flate.NewReader(resp.Body)
+			defer reader.Close()
+		case "br":
+			reader = io.NopCloser(brotli.NewReader(resp.Body))
+		default:
+			reader = resp.Body
+		}
+
+		body, err := io.ReadAll(reader)
 		if err != nil {
 			return "Failed to read response body\n\n" + err.Error(), ""
 		}
