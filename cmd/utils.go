@@ -6,7 +6,6 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/TylerBrock/colorjson"
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/textarea"
 	"github.com/charmbracelet/lipgloss"
@@ -55,22 +54,43 @@ func newTextarea() textarea.Model {
 }
 
 func formatJSON(input string) string {
+	// First, try to clean the input string
+	cleanInput := strings.TrimSpace(input)
+	
+	// Check if the input is empty
+	if cleanInput == "" {
+		return "Empty response"
+	}
+	
+	// Try to parse as JSON
 	var rawData interface{}
-
-	err := json.Unmarshal([]byte(input), &rawData)
+	err := json.Unmarshal([]byte(cleanInput), &rawData)
 	if err != nil {
-		return input
+		// If it's not valid JSON, return the original input
+		// but check if it contains binary data or control characters
+		if !isPrintable(cleanInput) {
+			return "Response contains binary or non-printable data:\n" + cleanInput
+		}
+		return cleanInput
 	}
 
-	f := colorjson.NewFormatter()
-	f.Indent = 2
-
-	prettyJSON, err := f.Marshal(rawData)
+	// Use standard JSON formatting instead of colorjson to avoid potential issues
+	prettyJSON, err := json.MarshalIndent(rawData, "", "  ")
 	if err != nil {
-		return input
+		return cleanInput
 	}
 
 	return string(prettyJSON)
+}
+
+// Helper function to check if string contains only printable characters
+func isPrintable(s string) bool {
+	for _, r := range s {
+		if r < 32 && r != 9 && r != 10 && r != 13 { // Allow tab, newline, carriage return
+			return false
+		}
+	}
+	return true
 }
 
 func loadVariables() string {
