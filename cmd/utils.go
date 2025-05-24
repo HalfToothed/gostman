@@ -128,6 +128,9 @@ type keymap struct {
 	Delete key.Binding
 	Back   key.Binding
 	Quit   key.Binding
+	Paths  key.Binding
+	Add    key.Binding
+	Switch key.Binding
 }
 
 // Keymap reusable key mappings shared across models
@@ -147,5 +150,17 @@ var Keymap = keymap{
 	Quit: key.NewBinding(
 		key.WithKeys("ctrl+c", "q"),
 		key.WithHelp("ctrl+c/q", "quit"),
+	),
+	Paths: key.NewBinding(
+		key.WithKeys("p"),
+		key.WithHelp("p", "projects"),
+	),
+	Add: key.NewBinding(
+		key.WithKeys("a"),
+		key.WithHelp("a", "add"),
+	),
+	Switch: key.NewBinding(
+		key.WithKeys("ctrl+p"),
+		key.WithHelp("ctrl+p", "switch project"),
 	),
 }
