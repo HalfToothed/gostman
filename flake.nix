@@ -31,7 +31,7 @@
 
         packages.default = buildGo123Module {
           pname = "gostman";
-          version = "1.1.1";
+          version = "1.1.0";
           src = ./.;
           vendorHash = "sha256-tr4t4zvxPxmFqflnrpTSs9cwnO7dh5CK3hflupFgR0I=";
           nativeBuildInputs = [ installShellFiles ];
