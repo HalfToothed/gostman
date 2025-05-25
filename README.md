@@ -13,6 +13,8 @@ A terminal-based API client built with Bubble Tea for creating, sending, and man
 
 ## 📥 Install
 
+### Go
+
 _If you have Go already, install the executable yourself_
 
 1. Run the following command:
@@ -20,11 +22,20 @@ _If you have Go already, install the executable yourself_
    go install github.com/halftoothed/gostman@latest
    ```
 2. The tool is ready to use!
-    ```bash
+   ```bash
    gostman
    ```
 
-## 🧑‍💻 Usage 
+### Nix
+
+If you are Nixos user, you can try gostman via flake.
+
+```nix
+nix run github:ppechkurov/gostman
+
+```
+
+## 🧑‍💻 Usage
 
 ### Use keyboard shortcuts to interact with the UI:
 
@@ -37,7 +48,7 @@ _If you have Go already, install the executable yourself_
 - Ctrl + D: Open Dashboard.
 - Ctrl + H: Open Help page
 
-### Saving and Loading Requests 
+### Saving and Loading Requests
 
 Requests are saved as JSON files in the user's home directory under a dedicated folder. The JSON file structure allows for efficient updates and deletions.
 
