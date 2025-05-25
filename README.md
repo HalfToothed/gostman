@@ -43,7 +43,7 @@ Or add it to your system:
   inputs = {
     ...
     # gostman input
-    gostman.url = "github:ppechkurov/gostman/feature/add-nix-flake-support";
+    gostman.url = "github:HalfToothed/gostman";
     # optionally follow your nixpkgs version
     gostman.inputs.nixpkgs.follows = "nixpkgs";
   };
@@ -60,9 +60,10 @@ Or add it to your system:
 }
 ```
 
+Now you can rebuild your system and run gostman
+
 ```bash
-sudo nixos-rebuild switch
-gostman
+sudo nixos-rebuild switch && gostman
 ```
 
 ## 🧑‍💻 Usage
