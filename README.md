@@ -28,11 +28,41 @@ _If you have Go already, install the executable yourself_
 
 ### Nix
 
-If you are Nixos user, you can try gostman via flake.
+If you are a Nixos user, you can try gostman via flake:
 
 ```nix
-nix run github:ppechkurov/gostman
+nix run github:HalfToothed/gostman
+```
 
+Or add it to your system:
+
+#### flake.nix
+
+```nix
+{
+  inputs = {
+    ...
+    # gostman input
+    gostman.url = "github:ppechkurov/gostman/feature/add-nix-flake-support";
+    # optionally follow your nixpkgs version
+    gostman.inputs.nixpkgs.follows = "nixpkgs";
+  };
+}
+```
+
+#### configuration.nix
+
+```nix
+{ inputs, pkgs, ...}: {
+  environment.systemPackages =
+    let gostman = inputs.gostman.packages.${pkgs.system}.default;
+    in [ gostman ];
+}
+```
+
+```bash
+sudo nixos-rebuild switch
+gostman
 ```
 
 ## 🧑‍💻 Usage
