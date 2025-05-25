@@ -3,7 +3,7 @@
 
   # Flake inputs
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-25.05";
     utils.url = "github:numtide/flake-utils";
   };
 
@@ -17,7 +17,7 @@
           default = mkShell {
             # The Nix packages provided in the environment
             packages = [
-              go_1_23
+              go_1_24
               golangci-lint
               golangci-lint-langserver
               gopls
