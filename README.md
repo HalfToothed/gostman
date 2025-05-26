@@ -52,7 +52,6 @@ Gostman automatically manages API collections per project directory:
 
 #### Dashboard Navigation
 - **p**: Toggle project view
-- **a**: Create new project (when in project view)
 - **r**: Remove selected project (when in project view)
 - **n**: Create new request
 - **d**: Delete selected request

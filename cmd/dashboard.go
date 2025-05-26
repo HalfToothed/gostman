@@ -7,7 +7,6 @@ import (
 
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
-	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
@@ -48,8 +47,6 @@ type board struct {
 	showMsg        bool
 	showProjects   bool
 	projectList    list.Model
-	showInput      bool
-	projectInput   textinput.Model
 }
 
 func dashboard(width, height int, styles *Styles, returnModel *Model) board {
@@ -107,12 +104,6 @@ func dashboard(width, height int, styles *Styles, returnModel *Model) board {
 		Background(lipgloss.Color("#7D56F4")).
 		Padding(0, 1)
 
-	// Initialize project input
-	board.projectInput = textinput.New()
-	board.projectInput.Placeholder = "Enter project name..."
-	board.projectInput.Width = width - 10
-	board.projectInput.CharLimit = 200
-
 	return board
 }
 
@@ -127,32 +118,12 @@ func (m board) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 		}
 		if msg.String() == "esc" {
-			if m.showInput {
-				m.showInput = false
-				m.projectInput.Blur()
-				return m, nil
-			}
 			m.returnModel.height = m.height
 			m.returnModel.width = m.width
 			return m.returnModel, nil
 		}
 		if msg.String() == "enter" {
-			if m.showInput {
-				// Create new project
-				projectName := m.projectInput.Value()
-				if projectName != "" {
-					if err := CreateProjectInCurrentDir(); err != nil {
-						// Show error message and stay in input mode
-						m.projectInput.SetValue("")
-						m.projectInput.Placeholder = "Error: " + err.Error() + " - Try again..."
-						return m, nil
-					}
-					m.showInput = false
-					m.showProjects = false
-					// Refresh the dashboard with new data
-					return dashboard(m.width, m.height, m.styles, m.returnModel), nil
-				}
-			} else if m.showProjects {
+			if m.showProjects {
 				// Switch project
 				data := m.projectList.SelectedItem().(projectItem)
 				if err := SetCurrentProject(data.project.Path); err != nil {
@@ -174,7 +145,7 @@ func (m board) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		}
 		if msg.String() == "n" {
-			if !m.showMsg && !m.showProjects && !m.showInput {
+			if !m.showMsg && !m.showProjects {
 				newModel := NewModel()
 				newModel.width = m.width
 				newModel.height = m.height
@@ -184,16 +155,9 @@ func (m board) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		if msg.String() == "p" && !m.showMsg {
 			m.showProjects = !m.showProjects
-			m.showInput = false
 			return m, nil
 		}
-		if msg.String() == "a" && !m.showMsg && m.showProjects {
-			m.showInput = true
-			m.projectInput.SetValue("")
-			m.projectInput.Focus()
-			return m, nil
-		}
-		if msg.String() == "r" && !m.showMsg && m.showProjects && !m.showInput {
+		if msg.String() == "r" && !m.showMsg && m.showProjects {
 			// Remove selected project
 			data := m.projectList.SelectedItem().(projectItem)
 			if err := RemoveProject(data.project.Path); err != nil {
@@ -203,7 +167,7 @@ func (m board) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			// Refresh the dashboard
 			return dashboard(m.width, m.height, m.styles, m.returnModel), nil
 		}
-		if msg.String() == "d" && !m.showMsg && !m.showProjects && !m.showInput {
+		if msg.String() == "d" && !m.showMsg && !m.showProjects {
 			// Show message before deleting
 			m.showMsg = true
 			return m, nil
@@ -243,9 +207,7 @@ func (m board) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	}
 
 	var cmd tea.Cmd
-	if m.showInput {
-		m.projectInput, cmd = m.projectInput.Update(msg)
-	} else if m.showProjects {
+	if m.showProjects {
 		m.projectList, cmd = m.projectList.Update(msg)
 	} else {
 		m.list, cmd = m.list.Update(msg)
@@ -257,12 +219,8 @@ func (m board) View() string {
 	var footer string
 	var body string
 	
-	if m.showInput {
-		footer = m.appBoundaryMessage("Create project in current dir • <ESC> to cancel")
-		inputView := "Create New Project:\n\n" + m.projectInput.View()
-		body = borderStyle.Width(m.width - 2).Render(inputView)
-	} else if m.showProjects {
-		footer = m.appBoundaryMessage("↑↓ navigate • enter to select • a to create • r to remove • esc to cancel")
+	if m.showProjects {
+		footer = m.appBoundaryMessage("↑↓ navigate • enter to select • r to remove • esc to cancel")
 		
 		projectHeader := lipgloss.NewStyle().
 			Bold(true).
