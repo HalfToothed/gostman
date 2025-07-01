@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"fmt"
-	"path/filepath"
 	"strings"
 
 	"github.com/charmbracelet/bubbles/spinner"
@@ -88,7 +86,7 @@ func NewModel() Model {
 	m.spinner = spinner.New()
 	m.spinner.Spinner = spinner.Dot
 	m.spinner.Style = lipgloss.NewStyle().Foreground(lipgloss.Color("#E03535"))
-	m.message = m.appBoundaryView("Ctrl+c to quit, Ctrl+h for help, Ctrl+p for projects")
+	m.message = m.appBoundaryView("Ctrl+c to quit, Ctrl+h for help")
 	m.loading = false
 
 	return m
@@ -148,10 +146,6 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+d":
 			dashboard := dashboard(m.width, m.height, m.styles, &m)
 			return dashboard, nil
-		case "ctrl+p":
-			dashboardModel := dashboard(m.width, m.height, m.styles, &m)
-			dashboardModel.showProjects = true
-			return dashboardModel, nil
 		case "ctrl+s":
 
 			m.loading = true
@@ -170,7 +164,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		case "tab":
 			m.focused = (m.focused + 1) % len(m.fields)
-			m.message = m.appBoundaryView("Ctrl+c to quit, Ctrl+h for help, Ctrl+p for projects")
+			m.message = m.appBoundaryView("Ctrl+c to quit, Ctrl+h for help")
 		}
 	}
 
@@ -234,39 +228,6 @@ func (m Model) View() string {
 
 	var footer string
 
-	// Create project selector header
-	currentProject := GetCurrentProject()
-	projects := GetProjects()
-	var projectName string
-	if currentProject == "" {
-		projectName = "Default"
-	} else {
-		projectName = filepath.Base(currentProject)
-		// Find project name from config
-		for _, p := range projects {
-			if p.Path == currentProject {
-				projectName = p.Name
-				break
-			}
-		}
-	}
-	
-	projectCount := len(projects)
-	var projectInfo string
-	if projectCount == 0 {
-		projectInfo = "Project: " + projectName + " (no projects)"
-	} else {
-		projectInfo = "Project: " + projectName + " (" + fmt.Sprintf("%d", projectCount) + " total) - Ctrl+P to switch"
-	}
-	
-	projectSelector := lipgloss.NewStyle().
-		Bold(true).
-		Foreground(lipgloss.Color("#FAFAFA")).
-		Background(lipgloss.Color("#7D56F4")).
-		Padding(0, 1).
-		Width(m.width - 2).
-		Render(projectInfo)
-
 	doc := strings.Builder{}
 	var renderedTabs []string
 
@@ -296,7 +257,7 @@ func (m Model) View() string {
 
 	tabContent := lipgloss.NewStyle().
 		Width(tabContentWidth - 2).
-		Height(m.height - 10).
+		Height(m.height - 8).
 		Render(m.tabContent[m.activeTab].View())
 
 	combined := lipgloss.JoinVertical(lipgloss.Left, tabRow, tabContent)
@@ -307,10 +268,10 @@ func (m Model) View() string {
 	doc.WriteString(finalPanel)
 	requestPanel := doc.String()
 
-	m.responseViewport.Height = m.height - 9
+	m.responseViewport.Height = m.height - 7
 	m.responseViewport.Width = m.width - tabContentWidth - 2
 
-	responsePanel := borderStyle.Width(m.width - tabContentWidth - 2).Height(m.height - 8).Render(titleStyle.Render(" Response: ") + headingStyle.Render(m.status) + "\n" + m.responseViewport.View())
+	responsePanel := borderStyle.Width(m.width - tabContentWidth - 2).Height(m.height - 6).Render(titleStyle.Render(" Response: ") + headingStyle.Render(m.status) + "\n" + m.responseViewport.View())
 	mainPanel := lipgloss.JoinHorizontal(lipgloss.Left, requestPanel, responsePanel)
 
 	nameStyle := borderStyle
@@ -345,7 +306,7 @@ func (m Model) View() string {
 
 	topPanel := lipgloss.JoinHorizontal(lipgloss.Left, nameInput, methodInput, urlInput)
 
-	body := lipgloss.JoinVertical(lipgloss.Top, projectSelector, "", topPanel, mainPanel)
+	body := lipgloss.JoinVertical(lipgloss.Top, topPanel, mainPanel)
 
 	if m.loading {
 		spinnerView := m.spinner.View()
@@ -360,6 +321,6 @@ func (m Model) View() string {
 func (m *Model) sizeInputs() {
 	for i := range m.tabContent {
 		m.tabContent[i].SetWidth(int(float64(m.width)*0.5) - 2)
-		m.tabContent[i].SetHeight(m.height - 10)
+		m.tabContent[i].SetHeight(m.height - 8)
 	}
 }
