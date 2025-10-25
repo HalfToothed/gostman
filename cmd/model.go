@@ -164,7 +164,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		case "tab":
 			m.focused = (m.focused + 1) % len(m.fields)
-			m.message = m.appBoundaryView("Ctrl+c to quit, Ctrl+h for help")
+
+		case "shift+tab":
+			m.focused = (m.focused - 1) % len(m.fields)
 		}
 	}
 
