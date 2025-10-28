@@ -149,3 +149,9 @@ var Keymap = keymap{
 		key.WithHelp("ctrl+c/q", "quit"),
 	),
 }
+
+var ansiRegexp = regexp.MustCompile(`\x1b\[[0-9;]*[A-Za-z]`)
+
+func stripANSI(input string) string {
+	return ansiRegexp.ReplaceAllString(input, "")
+}
