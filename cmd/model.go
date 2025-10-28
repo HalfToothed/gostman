@@ -3,6 +3,7 @@ package cmd
 import (
 	"strings"
 
+	"github.com/atotto/clipboard"
 	"github.com/charmbracelet/bubbles/spinner"
 	"github.com/charmbracelet/bubbles/textarea"
 	"github.com/charmbracelet/bubbles/textinput"
@@ -32,6 +33,7 @@ type Model struct {
 	spinner          spinner.Model
 	message          string
 	loading          bool
+	apiResponse      string
 }
 
 func NewModel() Model {
@@ -164,10 +166,15 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		case "tab":
 			m.focused = (m.focused + 1) % len(m.fields)
+			m.message = m.appBoundaryView("Ctrl+c to quit, Ctrl+h for help")
 
-		case "shift+tab":
-			m.focused = (m.focused - 1) % len(m.fields)
+		case "ctrl+y":
+			txt := stripANSI(m.apiResponse)
+			clipboard.WriteAll(txt)
+			m.message = m.appBoundaryMessage("Response Copied ...")
+			return m, nil
 		}
+
 	}
 
 	m.sizeInputs()
@@ -181,6 +188,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.message = m.appBoundaryMessage("Request Sent!")
 
 		wrappedContent := wordwrap.String(m.response, m.responseViewport.Width)
+		m.apiResponse = wrappedContent
 		m.responseViewport.SetContent(wrappedContent)
 		m.responseViewport.GotoTop()
 	case saveMsg:
