@@ -207,6 +207,31 @@ func send(m Model) (string, string) {
 
 		return string(body), resp.Status
 
+	case "OPTIONS":
+		client := &http.Client{}
+		req, err := http.NewRequest("OPTIONS", URL, nil)
+		if err != nil {
+			return "Failed to make request\n\n" + err.Error(), ""
+		}
+
+		// Set headers
+		for key, value := range headers {
+			req.Header.Set(key, value)
+		}
+
+		resp, err := client.Do(req)
+		if err != nil {
+			return "Failed to make request\n\n" + err.Error(), ""
+		}
+		defer resp.Body.Close()
+
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return "Failed to read response body\n\n" + err.Error(), ""
+		}
+
+		return string(body), resp.Status
+
 	default:
 		return "Request Method or Url is set incorrectly", " Incorrect Request "
 	}

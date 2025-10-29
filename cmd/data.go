@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 
 	"github.com/google/uuid"
 )
@@ -31,6 +32,28 @@ type Request struct {
 
 var appFolder = getAppDataPath()
 var jsonfilePath = filepath.Join(appFolder, "gostman.json")
+
+// getSavedData reads the application's data file and returns the parsed SavedData.
+// If the file does not exist or is empty, it returns a zero-value SavedData.
+func getSavedData() SavedData {
+	var saved SavedData
+
+	if checkFileExists(jsonfilePath) {
+		// File does not exist yet
+		return saved
+	}
+
+	file, err := os.ReadFile(jsonfilePath)
+	if err != nil {
+		return saved
+	}
+	if len(file) == 0 {
+		return saved
+	}
+
+	_ = json.Unmarshal(file, &saved)
+	return saved
+}
 
 func getAppDataPath() string {
 	if runtime.GOOS == "windows" {
@@ -119,6 +142,16 @@ func load(data Request, model *Model) {
 	model.nameField.SetValue(data.Name)
 	model.urlField.SetValue(data.URL)
 	model.methodField.SetValue(data.Method)
+	// Sync methodIndex with loaded method if present
+	if len(model.methodOptions) == 0 {
+		model.methodOptions = []string{"GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS"}
+	}
+	for i, opt := range model.methodOptions {
+		if strings.EqualFold(opt, data.Method) {
+			model.methodIndex = i
+			break
+		}
+	}
 	model.tabContent[0].SetValue(data.Body)
 	model.tabContent[1].SetValue(data.QueryParams)
 	model.tabContent[2].SetValue(data.Headers)

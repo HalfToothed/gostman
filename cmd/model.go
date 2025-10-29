@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/atotto/clipboard"
@@ -34,6 +35,17 @@ type Model struct {
 	message          string
 	loading          bool
 	apiResponse      string
+
+	// Histories for auto-completion (derived from saved requests)
+	nameHistory []string
+	urlHistory  []string
+	// Autocomplete state
+	autoCompleteIndex int
+	autoCompleteField string // "name" or "url"
+
+	// HTTP method selection options/index
+	methodOptions []string
+	methodIndex   int
 }
 
 func NewModel() Model {
@@ -59,8 +71,13 @@ func NewModel() Model {
 	m.methodField = textinput.New()
 	m.methodField.Placeholder = "METHOD"
 	m.methodField.Focus()
-	m.methodField.CharLimit = 6
+	m.methodField.CharLimit = 7
 	m.methodField.Cursor.Blink = false
+
+	// Initialize HTTP method list and default selection
+	m.methodOptions = []string{"GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS"}
+	m.methodIndex = 0
+	m.methodField.SetValue(m.methodOptions[m.methodIndex])
 
 	// Initialize tab contents
 	for range m.tabs {
@@ -90,6 +107,32 @@ func NewModel() Model {
 	m.spinner.Style = lipgloss.NewStyle().Foreground(lipgloss.Color("#E03535"))
 	m.message = m.appBoundaryView("Ctrl+c to quit, Ctrl+h for help")
 	m.loading = false
+
+	// Build histories from saved requests (for auto-complete)
+	if saved := getSavedData(); len(saved.Requests) > 0 {
+		dedup := func(list []string) []string {
+			m := map[string]struct{}{}
+			out := make([]string, 0, len(list))
+			for _, s := range list {
+				if s == "" {
+					continue
+				}
+				if _, ok := m[s]; !ok {
+					m[s] = struct{}{}
+					out = append(out, s)
+				}
+			}
+			return out
+		}
+		names := make([]string, 0, len(saved.Requests))
+		urls := make([]string, 0, len(saved.Requests))
+		for _, r := range saved.Requests {
+			names = append(names, r.Name)
+			urls = append(urls, r.URL)
+		}
+		m.nameHistory = dedup(names)
+		m.urlHistory = dedup(urls)
+	}
 
 	return m
 }
@@ -167,6 +210,39 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "tab":
 			m.focused = (m.focused + 1) % len(m.fields)
 			m.message = m.appBoundaryView("Ctrl+c to quit, Ctrl+h for help")
+			// reset autocomplete cycling when focus changes
+			m.autoCompleteIndex = 0
+			m.autoCompleteField = ""
+
+		case "shift+tab":
+			m.focused = (m.focused - 1) % len(m.fields)
+			m.message = m.appBoundaryView("Ctrl+c to quit, Ctrl+h for help")
+			// reset autocomplete cycling when focus changes
+			m.autoCompleteIndex = 0
+			m.autoCompleteField = ""
+
+		case "ctrl+f":
+			if m.focused == 0 {
+				m = m.applyAutoComplete("name")
+				return m, nil
+			}
+			if m.focused == 2 {
+				m = m.applyAutoComplete("url")
+				return m, nil
+			}
+
+		case "up":
+			if m.focused == 1 { // method field: cycle up
+				m.methodIndex = (m.methodIndex - 1 + len(m.methodOptions)) % len(m.methodOptions)
+				m.methodField.SetValue(m.methodOptions[m.methodIndex])
+				return m, nil
+			}
+		case "down":
+			if m.focused == 1 { // method field: cycle down
+				m.methodIndex = (m.methodIndex + 1) % len(m.methodOptions)
+				m.methodField.SetValue(m.methodOptions[m.methodIndex])
+				return m, nil
+			}
 
 		case "ctrl+y":
 			txt := stripANSI(m.apiResponse)
@@ -187,6 +263,32 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.loading = false
 		m.message = m.appBoundaryMessage("Request Sent!")
 
+		// Update in-session histories from current inputs
+		if v := strings.TrimSpace(m.nameField.Value()); v != "" {
+			exists := false
+			for _, s := range m.nameHistory {
+				if s == v {
+					exists = true
+					break
+				}
+			}
+			if !exists {
+				m.nameHistory = append(m.nameHistory, v)
+			}
+		}
+		if v := strings.TrimSpace(m.urlField.Value()); v != "" {
+			exists := false
+			for _, s := range m.urlHistory {
+				if s == v {
+					exists = true
+					break
+				}
+			}
+			if !exists {
+				m.urlHistory = append(m.urlHistory, v)
+			}
+		}
+
 		wrappedContent := wordwrap.String(m.response, m.responseViewport.Width)
 		m.apiResponse = wrappedContent
 		m.responseViewport.SetContent(wrappedContent)
@@ -194,18 +296,47 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case saveMsg:
 		m.loading = false
 		m.message = m.appBoundaryMessage(msg.message)
+		// Also update histories on save
+		if v := strings.TrimSpace(m.nameField.Value()); v != "" {
+			exists := false
+			for _, s := range m.nameHistory {
+				if s == v {
+					exists = true
+					break
+				}
+			}
+			if !exists {
+				m.nameHistory = append(m.nameHistory, v)
+			}
+		}
+		if v := strings.TrimSpace(m.urlField.Value()); v != "" {
+			exists := false
+			for _, s := range m.urlHistory {
+				if s == v {
+					exists = true
+					break
+				}
+			}
+			if !exists {
+				m.urlHistory = append(m.urlHistory, v)
+			}
+		}
 	}
 
 	// Update based on focus
 	switch m.focused {
 	case 0:
 		m.nameField, cmd = m.nameField.Update(msg)
+		// Update inline suggestion hint for name
+		m.recomputeInlineSuggestion("name")
 		cmds = append(cmds, cmd)
 	case 1:
 		m.methodField, cmd = m.methodField.Update(msg)
 		cmds = append(cmds, cmd)
 	case 2:
 		m.urlField, cmd = m.urlField.Update(msg)
+		// Update inline suggestion hint for URL
+		m.recomputeInlineSuggestion("url")
 		cmds = append(cmds, cmd)
 	case 3:
 		// Update the active tab in the tabContent array
@@ -332,5 +463,57 @@ func (m *Model) sizeInputs() {
 	for i := range m.tabContent {
 		m.tabContent[i].SetWidth(int(float64(m.width)*0.5) - 2)
 		m.tabContent[i].SetHeight(m.height - 8)
+	}
+}
+
+// applyAutoComplete tries to complete the current field from history. Repeated triggers cycle through matches.
+func (m Model) applyAutoComplete(field string) Model {
+	pick := m.getBestSuggestion(field)
+	if pick == "" {
+		return m
+	}
+	if field == "name" {
+		m.nameField.SetValue(pick)
+	} else {
+		m.urlField.SetValue(pick)
+	}
+	m.autoCompleteField = field
+	// don't cycle indices with inline accept; keep index at 0
+	return m
+}
+
+// getBestSuggestion returns the first history entry that matches the current prefix for the given field.
+func (m Model) getBestSuggestion(field string) string {
+	var current string
+	var history []string
+	switch field {
+	case "name":
+		current = strings.TrimSpace(m.nameField.Value())
+		history = m.nameHistory
+	case "url":
+		current = strings.TrimSpace(m.urlField.Value())
+		history = m.urlHistory
+	default:
+		return ""
+	}
+	if len(history) == 0 {
+		return ""
+	}
+	lower := strings.ToLower(current)
+	for _, h := range history {
+		if lower != "" && strings.HasPrefix(strings.ToLower(h), lower) && h != current {
+			return h
+		}
+	}
+	return ""
+}
+
+// recomputeInlineSuggestion updates the footer hint to show the best suggestion for the field.
+func (m *Model) recomputeInlineSuggestion(field string) {
+	suggest := m.getBestSuggestion(field)
+	if suggest != "" && !m.loading {
+		m.message = m.appBoundaryView(fmt.Sprintf("\u21B3 Suggest: %s  (Ctrl+F to accept)", suggest))
+	} else if !m.loading {
+		m.message = m.appBoundaryView("Ctrl+c to quit, Ctrl+h for help")
 	}
 }
