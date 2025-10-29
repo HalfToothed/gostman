@@ -9,11 +9,15 @@ import (
 )
 
 const commandsContent = `tab = Move Around
+shift + tab = Move Backwards
 enter = Send Request
 ctrl + s = Save Request								
 shift + Arrow Keys = Change Tabs (Body/Param/Header)
 ctrl + e = Open Environment Variables page
 ctrl + d = Open dashboard
+ctrl + y = Copy Response to Clipboard
+ctrl + f = Auto-complete Name/URL from history
+up/down on Method = Cycle HTTP method
 ctrl + c = Quit`
 
 func createCommandRows() []table.Row {
