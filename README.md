@@ -10,6 +10,7 @@ A terminal-based API client built with Bubble Tea for creating, sending, and man
 - Save, load, and manage requests.
 - Edit and delete saved requests easily.
 - Dynamic UI with support for status messages, and detailed responses.
+- Auto-completion for Name/URL fields from your previous inputs.
 
 ## 📥 Install
 
@@ -68,7 +69,7 @@ sudo nixos-rebuild switch && gostman
 
 ## 🧑‍💻 Usage
 
-### Use keyboard shortcuts to interact with the UI:
+### Use keyboard shortcuts to interact with the UI
 
 - Ctrl + C: Quit the application.
 - Tab: Move Around
@@ -78,6 +79,8 @@ sudo nixos-rebuild switch && gostman
 - Ctrl + E: Open Environment Variables page
 - Ctrl + D: Open Dashboard.
 - Ctrl + H: Open Help page
+- Ctrl + Space / Ctrl + @ / Ctrl + F: Auto-complete Name/URL from history
+- Up/Down on Method: Cycle HTTP method
 
 ### Saving and Loading Requests
 
